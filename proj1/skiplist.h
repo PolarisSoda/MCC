@@ -5,34 +5,36 @@
 
 using namespace std;
  
-template<class K,class V,int MAXLEVEL>
-class skiplist_node
-{
+template<class K,class V,int MAXLEVEL> 
+class skiplist_node {
 public:
-    skiplist_node()
-    {
-        for ( int i=1; i<=MAXLEVEL; i++ ) {
+    /*
+    K key;
+    V value;
+    skiplist_node<K,V,MAXLEVEL>* forwards[MAXLEVEL+1];
+    */
+    //Constructor with nothing
+    skiplist_node() {
+        for(int i=1; i<=MAXLEVEL; i++) {
+            forwards[i] = NULL;
+        }
+    }
+
+    //Constructor with key.
+    skiplist_node(K searchKey) : key(searchKey) {
+        for(int i=1; i<=MAXLEVEL; i++) {
+            forwards[i] = NULL;
+        }
+    }
+
+    //Constructor with key and value.
+    skiplist_node(K searchKey,V val) : key(searchKey),value(val) {
+        for(int i=1; i<=MAXLEVEL; i++) {
             forwards[i] = NULL;
         }
     }
  
-    skiplist_node(K searchKey):key(searchKey)
-    {
-        for ( int i=1; i<=MAXLEVEL; i++ ) {
-            forwards[i] = NULL;
-        }
-    }
- 
-    skiplist_node(K searchKey,V val):key(searchKey),value(val)
-    {
-        for ( int i=1; i<=MAXLEVEL; i++ ) {
-            forwards[i] = NULL;
-        }
-    }
- 
-    virtual ~skiplist_node()
-    {
-    }
+    virtual ~skiplist_node() {}
  
     K key;
     V value;
@@ -41,27 +43,39 @@ public:
  
 ///////////////////////////////////////////////////////////////////////////////
  
-template<class K, class V, int MAXLEVEL = 16>
-class skiplist
-{
+template<class K,class V,int MAXLEVEL=16>
+class skiplist {
 public:
+    /*
+    K m_minKey;
+    K m_maxKey;
+    int max_curr_level;
+    skiplist_node<K,V,MAXLEVEL>* m_pHeader;
+    skiplist_node<K,V,MAXLEVEL>* m_pTail;
+    */
     typedef K KeyType;
     typedef V ValueType;
     typedef skiplist_node<K,V,MAXLEVEL> NodeType;
- 
+    
+    //저희는 skiplist<int,int> list(0,INT_MAX)를 사용합니다.
+    //그렇기 때문에? Header는 0이고 Tail은 INT_MAX의 값을 가질 것입니다.
+    //그리고 node에는 forward밖에 없습니다.
+    //처음이니까 모든 높이에 대해서 head -> tail을 해 놓습니다.
     skiplist(K minKey,K maxKey):m_pHeader(NULL),m_pTail(NULL),
                                 max_curr_level(1),max_level(MAXLEVEL),
                                 m_minKey(minKey),m_maxKey(maxKey)
     {
         m_pHeader = new NodeType(m_minKey);
         m_pTail = new NodeType(m_maxKey);
-        for ( int i=1; i<=MAXLEVEL; i++ ) {
+        for (int i=1; i<=MAXLEVEL; i++) {
             m_pHeader->forwards[i] = m_pTail;
         }
     }
- 
-    virtual ~skiplist()
-    {
+    
+    //Destructor in skiplist
+    //1이 제일 낮은 레벨인 것 같네요?
+    //1은 모든 node를 포함하고 있습니다.
+    virtual ~skiplist() {
         NodeType* currNode = m_pHeader->forwards[1];
         while ( currNode != m_pTail ) {
             NodeType* tempNode = currNode;
@@ -71,22 +85,25 @@ public:
         delete m_pHeader;
         delete m_pTail;
     }
- 
-    void insert(K searchKey,V newValue)
-    {
-        skiplist_node<K,V,MAXLEVEL>* update[MAXLEVEL];
+    
+    //Key와 Value의 차이는 무엇인가?
+    //나도 잘 모르겠습니다.
+    //대충 각 레벨별로 얘가 들어갈 위치 바로 왼쪽을 pointer의 형태로 저장한 것이라 보면 될 것 같음.
+    
+    void insert(K searchKey,V newValue) {
+        skiplist_node<K,V,MAXLEVEL>* update[MAXLEVEL]; //포인터를 잠시 담아두는 배열, 실제 메모리를 차지하는 것은 아님.
         NodeType* currNode = m_pHeader;
         for(int level=max_curr_level; level >=1; level--) {
             while ( currNode->forwards[level]->key < searchKey ) {
                 currNode = currNode->forwards[level];
             }
             update[level] = currNode;
-        }
-        currNode = currNode->forwards[1];
+        } //전체적으로 레벨들을 순회하면서 직전의 포인터들을 저장합니다.
+        currNode = currNode->forwards[1]; //
 
         if ( currNode->key == searchKey ) {
             currNode->value = newValue;
-        }
+        } //KICK IT
         else {
             int newlevel = randomLevel();
             if ( newlevel > max_curr_level ) {
@@ -192,4 +209,3 @@ protected:
 };
  
 ///////////////////////////////////////////////////////////////////////////////
- 

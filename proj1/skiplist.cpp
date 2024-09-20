@@ -12,14 +12,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iostream>
-
+#include <time.h>
+#include <thread>
 #include "skiplist.h"
 
 using namespace std;
 
-int main(int argc, char* argv[])
-{
-    int count=0;
+int main(int argc, char* argv[]) {
+    int count = 0;
     struct timespec start, stop;
 
     skiplist<int, int> list(0,INT_MAX);
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     }
     char *fn = argv[1];
 
-    clock_gettime( CLOCK_REALTIME, &start);
+    clock_gettime(CLOCK_REALTIME,&start);
 
     // load input file
     FILE* fin = fopen(fn, "r");
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
             printf("ERROR: Unrecognized action: '%c'\n", action);
             exit(EXIT_FAILURE);
         }
-	count++;
+	    count++;
     }
     fclose(fin);
     clock_gettime( CLOCK_REALTIME, &stop);
