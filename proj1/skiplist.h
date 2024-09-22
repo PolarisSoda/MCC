@@ -1,10 +1,16 @@
 #include <iostream>
 #include <sstream>
 
-#define BILLION  1000000000L
+#define BILLION 1'000'000'000L
 
 using namespace std;
- 
+
+/*
+0 ~ 2,147,483,647
+대충 쪼개볼가요?
+21474
+그 이상에는 
+*/
 template<class K,class V,int MAXLEVEL> 
 class skiplist_node {
 public:

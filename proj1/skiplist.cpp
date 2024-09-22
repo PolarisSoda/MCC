@@ -14,9 +14,13 @@
 #include <iostream>
 #include <time.h>
 #include <thread>
+#include <shared_mutex>
 #include "skiplist.h"
 
 using namespace std;
+
+typedef shared_mutex Lock;
+typedef unique_lock<Lock> Writelock;
 
 int main(int argc, char* argv[]) {
     int count = 0;
@@ -25,8 +29,8 @@ int main(int argc, char* argv[]) {
     skiplist<int, int> list(0,INT_MAX);
 
     // check and parse command line options
-    if (argc != 2) {
-        printf("Usage: %s <infile>\n", argv[0]);
+    if (argc != 3) {
+        printf("Usage: %s <infile> <number of thread>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     char *fn = argv[1];
@@ -41,13 +45,12 @@ int main(int argc, char* argv[]) {
         if (action == 'i') {            // insert
             list.insert(num,num);
         }else if (action == 'q') {      // qeury
-            if(list.find(num)!=num)
-		cout << "ERROR: Not Found: " << num << endl;
+            if(list.find(num)!=num) cout << "ERROR: Not Found: " << num << endl;
         } else if (action == 'w') {     // wait
             // wait until previous operations finish
         } else if (action == 'p') {     // wait
             // wait until previous operations finish
-	    cout << list.printList() << endl;
+	        cout << list.printList() << endl;
         } else {
             printf("ERROR: Unrecognized action: '%c'\n", action);
             exit(EXIT_FAILURE);
