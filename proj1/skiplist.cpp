@@ -14,18 +14,24 @@
 #include <iostream>
 #include <time.h>
 #include <thread>
+#include <mutex>
 #include <shared_mutex>
 #include "skiplist.h"
 
 using namespace std;
 
 typedef shared_mutex Lock;
-typedef unique_lock<Lock> Writelock;
+typedef unique_lock<Lock> WriteLock;
+typedef shared_lock<Lock> ReadLock;
+
+Lock ITV[1<<16]; //구간 당 0~32767, 총 구간 65536개.
+//
 
 int main(int argc, char* argv[]) {
     int count = 0;
     struct timespec start, stop;
 
+    cout << sizeof(Lock);
     skiplist<int, int> list(0,INT_MAX);
 
     // check and parse command line options
