@@ -1,0 +1,8 @@
+1 2 3 4 5 6 7 8 9 
+Elapsed time: 0.0001985 sec
+Throughput: 120907 ops (operations/sec)
+Elapsed time: 1.28646 sec
+Throughput: 23319.8 ops (operations/sec)
+Elapsed time: 0.0012984 sec
+Throughput: 1.54036e+06 ops (operations/sec)
+2시간이 걸려도 안됨++

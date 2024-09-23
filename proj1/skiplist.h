@@ -5,12 +5,6 @@
 
 using namespace std;
 
-/*
-0 ~ 2,147,483,647
-대충 쪼개볼가요?
-21474
-그 이상에는 
-*/
 template<class K,class V,int MAXLEVEL> 
 class skiplist_node {
 public:
@@ -125,7 +119,8 @@ public:
             }
         }
     }
- 
+    
+    //erase는 다행스럽게도 필요가 없네요?
     void erase(K searchKey)
     {
         skiplist_node<K,V,MAXLEVEL>* update[MAXLEVEL];
@@ -153,11 +148,10 @@ public:
     }
  
     //const NodeType* find(K searchKey)
-    V find(K searchKey)
-    {
+    V find(K searchKey) {
         NodeType* currNode = m_pHeader;
-        for(int level=max_curr_level; level >=1; level--) {
-            while ( currNode->forwards[level]->key < searchKey ) {
+        for(int level=max_curr_level; level>=1; level--) {
+            while(currNode->forwards[level]->key < searchKey) {
                 currNode = currNode->forwards[level];
             }
         }
@@ -171,13 +165,11 @@ public:
         }
     }
  
-    bool empty() const
-    {
+    bool empty() const {
         return ( m_pHeader->forwards[1] == m_pTail );
     }
  
-    std::string printList()
-    {
+    std::string printList() {
 	int i=0;
         std::stringstream sstr;
         NodeType* currNode = m_pHeader->forwards[1];
@@ -194,8 +186,7 @@ public:
     const int max_level;
  
 protected:
-    double uniformRandom()
-    {
+    double uniformRandom() {
         return rand() / double(RAND_MAX);
     }
  
@@ -209,6 +200,7 @@ protected:
     }
     K m_minKey;
     K m_maxKey;
+    int zone;
     int max_curr_level;
     skiplist_node<K,V,MAXLEVEL>* m_pHeader;
     skiplist_node<K,V,MAXLEVEL>* m_pTail;
