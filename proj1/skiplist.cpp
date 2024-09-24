@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <iostream>
 #include <time.h>
@@ -15,62 +15,47 @@
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
+#include <atomic>
+#include <queue>
 #include "skiplist.h"
-#include "cc_queue.h"
 
 using namespace std;
 
-typedef shared_mutex Lock;
-typedef unique_lock<Lock> WriteLock;
-typedef shared_lock<Lock> ReadLock;
-typedef pair<int,int> pii;
-
+//큐에 들어가서 스레드가 이것을 가지고 식별합니다.
+struct info {
+    char c;
+    int a[4];
+};
 //구간 당 0~16384, 총 구간 131072개. 1 << 17
 //구간 당 0~32767, 총 구간 65536개. 1 << 16
 //구간 당 0~65535, 총 구간 32768개. 1 << 15
-
+constexpr int itv_len = 1<<16;
 constexpr int buf_size = hardware_destructive_interference_size; //false sharing 방지를 위한 align amount
+vector<skiplist<int,int>> V_skiplist; //SkipList들을 가지고 있는 Vector
+CC_queue<info> task_queue; //Task를 관리하는 Concurrent Queue
+vector<pii> status; //[Master 전용], 각 skiplist에 들어간 R,W 쿼리 관리.
+
+
 alignas(buf_size) Lock SL_LOCK[1<<16]; 
 int round[1<<16], finished[1<<16];
 pii bb[1<<16];
 Lock bb_lock[1<<16];
 vector<thread> thread_V;
-cc_queue task_queue;
+//skiplist<int, int> skiplist_arr[1<<16];
 
-//일단은 thread create_destroy부터 해보고, 그다음에 threadpool로 넘어가겠습니다.
-//일단은 아무렇게나 thread create를 하겠죠.
-//thread가 완료 했으면
-//지난번에 이걸 돌렸어야 했거나, 이미 돌렸다는 것을 어케 알 것인가?
-/*
-i 20
-i 15
-i 10
-q 10
-q 20
-q 30
-i 30
-
-그 round에서 수행되야 하는 가장 마지막 q의 경우는 알 수 있지.
-q끼리는 크게 괘념치 않는다.
-서로 반대되거나 i면 문제지.
-
-system한 array가 있다.
-이것은 main_thread가 job을 받으면서 기록을 하는 것이다.
-이것이 수행되어야 한다라는 표시이다.
-그것을 제외하고 thread들이 표시하는 array가 있다. 이것은 thread가 완수한 목적을 주는 것이다. 
-항상 O - O를 잡는다.
-항상 O 를 잡는다.
-20 -> 1 
-15 -> 2
-10 -> 3
-10q ->
-*/
-
-int main(int argc, char* argv[]) {
+int main(int argc,char* argv[]) {
+    /*- INIT PAGE -*/
     int count = 0;
     struct timespec start, stop;
-    skiplist<int, int> list(0,INT_MAX);
-
+    
+    for(int i=0; i<itv_len; i++) {
+        int left = itv_len*i;
+        int right = left + itv_len-1;
+        cout << left << " " << right << endl;
+        skiplist<int,int> templist(i*itv_len,1<<15-1);
+        V_skiplist.push_back(templist);
+    }
+    exit(0);
     // check and parse command line options
     if(argc != 3) {
         printf("Usage: %s <infile> <number of thread>\n", argv[0]);
@@ -79,7 +64,6 @@ int main(int argc, char* argv[]) {
 
     char *fn = argv[1];
     int num_threads = stoi(argv[2]);
-
     thread_V.resize(num_threads);
 
     clock_gettime(CLOCK_REALTIME,&start);
@@ -94,13 +78,13 @@ int main(int argc, char* argv[]) {
             [TODO]
             1. EXCLUSIVE LOCK를 잡는다.
             */
-            list.insert(num,num);
+            //list.insert(num,num);
         } else if (action == 'q') {      // qeury
             /*
             [TODO]
             2. SHARED LOCK을 잡는다.
             */
-            if(list.find(num)!=num) cout << "ERROR: Not Found: " << num << endl;
+            //if(list.find(num)!=num) cout << "ERROR: Not Found: " << num << endl;
         } else if (action == 'w') {     // wait
             // wait until previous operations finish
             // No action will be acted.
@@ -117,6 +101,9 @@ int main(int argc, char* argv[]) {
 	    count++;
     }
     fclose(fin);
+
+    for(int i=0; i<num_threads; i++) thread_V[i].join();
+
     clock_gettime(CLOCK_REALTIME,&stop);
 
     // print results
@@ -129,14 +116,12 @@ int main(int argc, char* argv[]) {
 
 void thread_function(int lo) {
     //1. Check Queue First
-    node ret;
-    while(Queue_Dequeue(&task_queue,&ret) != 0);
-    if(ret.a == 'M') return;
+
+
 
     while(bb_lock[lo].try_lock_shared() == 1) {
         bb_lock[lo].unlock_shared();
     }
-    
 }
 void thread_write() {
     /*

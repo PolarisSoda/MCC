@@ -1,9 +1,16 @@
 #include <iostream>
 #include <sstream>
+#include <mutex>
+#include <shared_mutex>
 
 #define BILLION 1'000'000'000L
 
 using namespace std;
+
+typedef shared_mutex Lock;
+typedef unique_lock<Lock> WriteLock;
+typedef shared_lock<Lock> ReadLock;
+typedef pair<int,int> pii;
 
 template<class K,class V,int MAXLEVEL> 
 class skiplist_node {
@@ -119,36 +126,10 @@ public:
             }
         }
     }
-    
-    //erase는 다행스럽게도 필요가 없네요?
-    void erase(K searchKey)
-    {
-        skiplist_node<K,V,MAXLEVEL>* update[MAXLEVEL];
-        NodeType* currNode = m_pHeader;
-        for(int level=max_curr_level; level >=1; level--) {
-            while ( currNode->forwards[level]->key < searchKey ) {
-                currNode = currNode->forwards[level];
-            }
-            update[level] = currNode;
-        }
-        currNode = currNode->forwards[1];
-        if ( currNode->key == searchKey ) {
-            for ( int lv = 1; lv <= max_curr_level; lv++ ) {
-                if ( update[lv]->forwards[lv] != currNode ) {
-                    break;
-                }
-                update[lv]->forwards[lv] = currNode->forwards[lv];
-            }
-            delete currNode;
-            // update the max level
-            while ( max_curr_level > 1 && m_pHeader->forwards[max_curr_level] == NULL ) {
-                max_curr_level--;
-            }
-        }
-    }
  
     //const NodeType* find(K searchKey)
-    V find(K searchKey) {
+    //we have to change this to 
+    pair<V,V> find(K searchKey) {
         NodeType* currNode = m_pHeader;
         for(int level=max_curr_level; level>=1; level--) {
             while(currNode->forwards[level]->key < searchKey) {
@@ -157,7 +138,7 @@ public:
         }
         currNode = currNode->forwards[1];
         if ( currNode->key == searchKey ) {
-            return currNode->value;
+            return std::make_pair<V,V>(currNode->value,currNode->value);
         }
         else {
             //return NULL;
@@ -170,15 +151,15 @@ public:
     }
  
     std::string printList() {
-	int i=0;
+	    int i=0;
         std::stringstream sstr;
         NodeType* currNode = m_pHeader->forwards[1];
-        while ( currNode != m_pTail ) {
+        while (currNode != m_pTail) {
             //sstr << "(" << currNode->key << "," << currNode->value << ")" << endl;
             sstr << currNode->key << " ";
             currNode = currNode->forwards[1];
-	    i++;
-	    if(i>200) break;
+	        i++;
+	        if(i>200) break;
         }
         return sstr.str();
     }
@@ -207,3 +188,53 @@ protected:
 };
  
 ///////////////////////////////////////////////////////////////////////////////
+
+template<class T> class CC_queue {
+public:
+//structure defined
+struct qnode {
+    T value;
+    qnode* next;
+};
+//class method defined
+CC_queue() {
+    qnode* temp = new qnode;
+    temp->next = NULL;
+    this->head = this->tail = temp;
+}
+~CC_queue() {
+    T trash;
+    while (Dequeue(&trash) == 0);
+    delete this->head;
+}
+
+void Enqueue(T input) {
+    qnode *new_node = new qnode;
+    new_node->value = input;
+    new_node->next = NULL;
+
+    this->tail->next = new_node;
+    this->tail = new_node;
+}
+
+int Dequeue(T* value) {
+    this->headLock.lock();
+    qnode *temp = this->head;
+    qnode *newHead = temp->next;
+    if(newHead == NULL) {
+        this->headLock.unlock();
+        return -1;
+    }
+    *value = newHead->value;
+    this->head = newHead;
+    this->headLock.unlock();
+
+    delete(temp);
+    return 0;
+}
+
+private:
+    qnode* head;
+    qnode* tail;
+    mutex headLock;
+};
