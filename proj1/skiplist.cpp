@@ -29,7 +29,7 @@ constexpr int buf_size = 64;
 skiplist<int,int> list(0,INT_MAX); //SkipList
 CC_queue<info> task_queue; //Task를 관리하는 Concurrent Queue
 pii status; //[Master 전용], 각 skiplist에 들어간 R,W 쿼리 관리.
-pii Billboard; //[Worker 전용] 어디까지 완수되었는지 적는 용도.
+pii Billboard = {0,0}; //[Worker 전용] 어디까지 완수되었는지 적는 용도.
 mutex BB_lock; //Billboard lock.
 condition_variable BB_cv;
 
@@ -40,33 +40,35 @@ void thread_function(int lo) {
         info task;
         while(task_queue.Dequeue(&task) == -1); //task를 하나 가져왔음.
         if(task.inst == 'p') break; //task가 p일 경우, 즉시 종료함.
-        
+
         //we need to check billboard
         //RW 생각하라고
         if(task.inst == 'i') {
             unique_lock<mutex> lk(BB_lock);
-            BB_cv.wait(lk,[&]{return Billboard.first == task.ticket.first;});
+            // BB_cv.wait(lk,[&]{return Billboard.first == task.ticket.first;});
             BB_lock.unlock();
 
-            list.insert(task.target,task.target);
+            // list.insert(task.target,task.target);
 
             lk.lock();
-            Billboard.second = max(Billboard.second,task.task_num);
-            BB_cv.notify_all();
+            // Billboard.second = max(Billboard.second,task.task_num);
+            // BB_cv.notify_all();
             lk.unlock();
         } else {
+            /*
             unique_lock<mutex> lk(BB_lock);
             BB_cv.wait(lk,[&]{return Billboard.second == task.ticket.second;});
             BB_lock.unlock();
 
-            pair<int,int> ret = list.pair_find(task.target);
-            if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << "\n";
-            else cout << ret.first << " " << ret.second << "\n";
+            // pair<int,int> ret = list.pair_find(task.target);
+            // if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << "\n";
+            // else cout << ret.first << " " << ret.second << "\n";
 
             lk.lock();
             Billboard.first = max(Billboard.second,task.task_num);
             BB_cv.notify_all();
             lk.unlock();
+            */
         }
     }
     
@@ -94,7 +96,9 @@ int main(int argc,char* argv[]) {
     char action;
     long num;
     for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
+    cout << "MAKE SOMETHING\n";
     while(fscanf(fin, "%c %ld\n", &action, &num) > 0) {
+        cout << action << " ";
         if(action == 'i') {
             task_queue.Enqueue(info(action,count,num,status));
             status.second++;
@@ -114,8 +118,11 @@ int main(int argc,char* argv[]) {
         }
 	    count++;
     }
-    cout << "Done to Enqueue queue!\n";
     fclose(fin);
+    cout << "Done to Enqueue queue!\n";
+    for(int i=0; i<num_threads; i++) task_queue.Enqueue(info('p',0,0,{0,0}));
+    for(int i=0; i<num_threads; i++) V_thread[i].join();
+    
 
     //for(int i=0; i<num_threads; i++) V_thread[i].join();
     clock_gettime(CLOCK_REALTIME,&stop);
