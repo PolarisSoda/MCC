@@ -197,21 +197,23 @@ void Enqueue(T input) {
     new_node->value = input;
     new_node->next = NULL;
 
+    unique_lock<mutex> lk(this->tailLock);
     this->tail->next = new_node;
     this->tail = new_node;
+    lk.unlock();
 }
 
 int Dequeue(T* value) {
-    this->headLock.lock();
+    unique_lock<mutex> lk(this->headLock);
     qnode *temp = this->head;
     qnode *newHead = temp->next;
     if(newHead == NULL) {
-        this->headLock.unlock();
+        lk.unlock();
         return -1;
     }
     *value = newHead->value;
     this->head = newHead;
-    this->headLock.unlock();
+    lk.unlock();
 
     delete(temp);
     return 0;
@@ -220,5 +222,6 @@ int Dequeue(T* value) {
 private:
     qnode* head;
     qnode* tail;
+    mutex tailLock;
     mutex headLock;
 };
