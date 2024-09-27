@@ -98,7 +98,7 @@ public:
     void insert(K searchKey,V newValue) {
         while(true) {
             //FIND LOCATION SECTION
-            NodeType *previous[MAXLEVEL], *follower[MAXLEVEL];
+            NodeType *previous[MAXLEVEL+1], *follower[MAXLEVEL+1];
             NodeType* currNode = m_pHeader;
             bool same = false;
             for(int level=max_curr_level; level>=1; level--) {
@@ -110,7 +110,7 @@ public:
                 follower[level] = currNode->forwards[level];
             }
             if(same) return ; //CHECK DUPLICATE
-
+            
             int new_level = this->randomLevel();
             int locked_level = 0;
             bool error = false;
@@ -120,14 +120,19 @@ public:
                 locked_level = level;
                 if(previous[level]->forwards[level] != follower[level]) error = true;
             }
+            /*
             if(!error) {
                 NodeType* newNode= new NodeType(searchKey,newValue);
                 for(int level=1; level<=new_level; level++) {
                     newNode->forwards[level] = follower[level];
+                }
+                for(int level=1; level<=new_level; level++) {
                     previous[level]->forwards[level] = newNode;
                 }
             }
+            */
             for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
+            
         }
     }
  
