@@ -40,24 +40,25 @@ void thread_function(int lo) {
         info task;
         while(task_queue.Dequeue(&task) == -1); //task를 하나 가져왔음.
         if(task.inst == 'p') break; //task가 p일 경우, 즉시 종료함.
-
+        //cout << task.task_num << "?\n";
         //we need to check billboard
         //RW 생각하라고
         if(task.inst == 'i') {
             unique_lock<mutex> lk(BB_lock);
             // BB_cv.wait(lk,[&]{return Billboard.first == task.ticket.first;});
-            BB_lock.unlock();
+            lk.unlock();
 
             // list.insert(task.target,task.target);
 
             lk.lock();
-            // Billboard.second = max(Billboard.second,task.task_num);
+            //cout << Billboard.first << " " << Billboard.second << "\n";
+            // Billboard.second++;
+
             // BB_cv.notify_all();
             lk.unlock();
         } else {
-            /*
             unique_lock<mutex> lk(BB_lock);
-            BB_cv.wait(lk,[&]{return Billboard.second == task.ticket.second;});
+            // BB_cv.wait(lk,[&]{return Billboard.second == task.ticket.second;});
             BB_lock.unlock();
 
             // pair<int,int> ret = list.pair_find(task.target);
@@ -65,11 +66,12 @@ void thread_function(int lo) {
             // else cout << ret.first << " " << ret.second << "\n";
 
             lk.lock();
-            Billboard.first = max(Billboard.second,task.task_num);
-            BB_cv.notify_all();
+            // Billboard.first++;
+            // cout << Billboard.first << " " << Billboard.second << "\n";
+            // BB_cv.notify_all();
             lk.unlock();
-            */
         }
+        //cout << "Did : " << task.task_num << "\n";
     }
     
 }
@@ -98,7 +100,6 @@ int main(int argc,char* argv[]) {
     for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
     cout << "MAKE SOMETHING\n";
     while(fscanf(fin, "%c %ld\n", &action, &num) > 0) {
-        cout << action << " ";
         if(action == 'i') {
             task_queue.Enqueue(info(action,count,num,status));
             status.second++;
