@@ -1,9 +1,3 @@
-/*
- * main.cpp
- * Serial version
- * Compile with -O2
- */
-
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,44 +12,71 @@
 #include <atomic>
 #include <queue>
 #include "skiplist.h"
-
+#include <condition_variable>
 using namespace std;
 
 //큐에 들어가서 스레드가 이것을 가지고 식별합니다.
 struct info {
-    char c;
-    int a[4];
+    char inst;
+    int task_num;
+    int target;
+    pii ticket;
+    info() : inst(0), task_num(0), target(0), ticket({0,0}) {}
+    info(char c,int tn,int tg,pii t) : inst(c), task_num(tn), target(tg), ticket(t) {} 
 };
-//구간 당 0~16384, 총 구간 131072개. 1 << 17
-//구간 당 0~32767, 총 구간 65536개. 1 << 16
-//구간 당 0~65535, 총 구간 32768개. 1 << 15
-constexpr int itv_len = 1<<16;
-constexpr int buf_size = hardware_destructive_interference_size; //false sharing 방지를 위한 align amount
-vector<skiplist<int,int>> V_skiplist; //SkipList들을 가지고 있는 Vector
+
+constexpr int buf_size = 64;
+skiplist<int,int> list(0,INT_MAX); //SkipList
 CC_queue<info> task_queue; //Task를 관리하는 Concurrent Queue
-vector<pii> status; //[Master 전용], 각 skiplist에 들어간 R,W 쿼리 관리.
+pii status; //[Master 전용], 각 skiplist에 들어간 R,W 쿼리 관리.
+pii Billboard; //[Worker 전용] 어디까지 완수되었는지 적는 용도.
+mutex BB_lock; //Billboard lock.
+condition_variable BB_cv;
 
+vector<thread> V_thread;
 
-alignas(buf_size) Lock SL_LOCK[1<<16]; 
-int round[1<<16], finished[1<<16];
-pii bb[1<<16];
-Lock bb_lock[1<<16];
-vector<thread> thread_V;
-//skiplist<int, int> skiplist_arr[1<<16];
+void thread_function(int lo) {
+    while(true) {
+        info task;
+        while(task_queue.Dequeue(&task) == -1); //task를 하나 가져왔음.
+        if(task.inst == 'p') break; //task가 p일 경우, 즉시 종료함.
+        
+        //we need to check billboard
+        //RW 생각하라고
+        if(task.inst == 'i') {
+            unique_lock<mutex> lk(BB_lock);
+            BB_cv.wait(lk,[&]{return Billboard.first == task.ticket.first;});
+            BB_lock.unlock();
+
+            list.insert(task.target,task.target);
+
+            lk.lock();
+            Billboard.second = max(Billboard.second,task.task_num);
+            BB_cv.notify_all();
+            lk.unlock();
+        } else {
+            unique_lock<mutex> lk(BB_lock);
+            BB_cv.wait(lk,[&]{return Billboard.second == task.ticket.second;});
+            BB_lock.unlock();
+
+            pair<int,int> ret = list.pair_find(task.target);
+            if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << "\n";
+            else cout << ret.first << " " << ret.second << "\n";
+
+            lk.lock();
+            Billboard.first = max(Billboard.second,task.task_num);
+            BB_cv.notify_all();
+            lk.unlock();
+        }
+    }
+    
+}
 
 int main(int argc,char* argv[]) {
     /*- INIT PAGE -*/
     int count = 0;
     struct timespec start, stop;
-    
-    for(int i=0; i<itv_len; i++) {
-        int left = itv_len*i;
-        int right = left + itv_len-1;
-        cout << left << " " << right << endl;
-        skiplist<int,int> templist(i*itv_len,1<<15-1);
-        V_skiplist.push_back(templist);
-    }
-    exit(0);
+
     // check and parse command line options
     if(argc != 3) {
         printf("Usage: %s <infile> <number of thread>\n", argv[0]);
@@ -64,7 +85,7 @@ int main(int argc,char* argv[]) {
 
     char *fn = argv[1];
     int num_threads = stoi(argv[2]);
-    thread_V.resize(num_threads);
+    V_thread.resize(num_threads);
 
     clock_gettime(CLOCK_REALTIME,&start);
 
@@ -72,38 +93,31 @@ int main(int argc,char* argv[]) {
     FILE* fin = fopen(fn, "r");
     char action;
     long num;
+    for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
     while(fscanf(fin, "%c %ld\n", &action, &num) > 0) {
-        if(action == 'i') {            // insert
-            /*
-            [TODO]
-            1. EXCLUSIVE LOCK를 잡는다.
-            */
-            //list.insert(num,num);
-        } else if (action == 'q') {      // qeury
-            /*
-            [TODO]
-            2. SHARED LOCK을 잡는다.
-            */
+        if(action == 'i') {
+            task_queue.Enqueue(info(action,count,num,status));
+            status.second++;
+        } else if (action == 'q') {
+            task_queue.Enqueue(info(action,count,num,status));
+            status.first++;
             //if(list.find(num)!=num) cout << "ERROR: Not Found: " << num << endl;
-        } else if (action == 'w') {     // wait
+        } else if (action == 'w') {
             // wait until previous operations finish
             // No action will be acted.
         } else if (action == 'p') {     // wait
-            // wait until previous operations finish
-	        //cout << list.printList() << endl;
-            //p는 어떻게 할 것인가?
-            //어찌돼었든 중간에 한번 끝내야 한다.
-            //섞여들어가니까.
+            
+            task_queue.Dequeue(NULL);
         } else {
             printf("ERROR: Unrecognized action: '%c'\n", action);
             exit(EXIT_FAILURE);
         }
 	    count++;
     }
+    cout << "Done to Enqueue queue!\n";
     fclose(fin);
 
-    for(int i=0; i<num_threads; i++) thread_V[i].join();
-
+    //for(int i=0; i<num_threads; i++) V_thread[i].join();
     clock_gettime(CLOCK_REALTIME,&stop);
 
     // print results
@@ -112,16 +126,6 @@ int main(int argc,char* argv[]) {
     cout << "Throughput: " << (double) count / elapsed_time << " ops (operations/sec)" << "\n";
 
     return (EXIT_SUCCESS);
-}
-
-void thread_function(int lo) {
-    //1. Check Queue First
-
-
-
-    while(bb_lock[lo].try_lock_shared() == 1) {
-        bb_lock[lo].unlock_shared();
-    }
 }
 void thread_write() {
     /*
