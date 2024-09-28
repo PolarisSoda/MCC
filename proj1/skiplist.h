@@ -37,7 +37,7 @@ public:
     K key;
     V value;
     skiplist_node<K,V,MAXLEVEL>* forwards[MAXLEVEL+1];
-    mutex node_lock;
+    recursive_mutex node_lock;
 };
  
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,13 +45,6 @@ public:
 template<class K,class V,int MAXLEVEL=16>
 class skiplist {
 public:
-    /*
-    K m_minKey;
-    K m_maxKey;
-    int max_curr_level;
-    skiplist_node<K,V,MAXLEVEL>* m_pHeader;
-    skiplist_node<K,V,MAXLEVEL>* m_pTail;
-    */
     typedef K KeyType;
     typedef V ValueType;
     typedef skiplist_node<K,V,MAXLEVEL> NodeType;
@@ -80,7 +73,7 @@ public:
     
     pair<K,K> pair_find(K searchKey) {
         NodeType* currNode = m_pHeader;
-        for(int level=max_curr_level; level>=1; level--) {
+        for(int level=max_level; level>=1; level--) {
             while(currNode->forwards[level]->key < searchKey) {
                 currNode = currNode->forwards[level];
             }
@@ -97,27 +90,27 @@ public:
 
     void insert(K searchKey,V newValue) {
         while(true) {
-            //FIND LOCATION SECTION
             NodeType *previous[MAXLEVEL+1], *follower[MAXLEVEL+1];
             NodeType* currNode = m_pHeader;
             bool same = false;
-            for(int level=max_curr_level; level>=1; level--) {
-                while(currNode->forwards[level]->key < searchKey) {
-                    currNode = currNode->forwards[level];
+            
+            for(int level=max_level; level>=1; level--) {
+                NodeType* nextNode = currNode->forwards[level];
+                while(nextNode->key < searchKey) {
+                    currNode = nextNode, nextNode = currNode->forwards[level];
                 }
-                if(currNode->forwards[level]->key == searchKey) same = true;
+                if(nextNode->key == searchKey) same = true;
                 previous[level] = currNode;
-                if(previous[level] == NULL) cerr << "HERE IS THE PROBLEM?\n";
-                follower[level] = currNode->forwards[level];
+                follower[level] = nextNode;
             }
-            if(same) return ; //CHECK DUPLICATE
+            if(same) return ;
             
             int new_level = this->randomLevel();
             int locked_level = 0;
             bool error = false;
+
             for(int level=1; level<=new_level; level++) {
                 if(error) break;
-                if(previous[level] == NULL) cerr << "WHY NULL?\n";
                 previous[level]->node_lock.lock();
                 locked_level = level;
                 if(previous[level]->forwards[level] != follower[level]) error = true;
@@ -131,10 +124,12 @@ public:
                 for(int level=1; level<=new_level; level++) {
                     previous[level]->forwards[level] = newNode;
                 }
+                //newNode->linked = true;
                 for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
                 break;
             } else {
                 for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
+                continue;
             }
         }
     }

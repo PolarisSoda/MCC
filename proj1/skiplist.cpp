@@ -11,8 +11,9 @@
 #include <vector>
 #include <atomic>
 #include <queue>
-#include "skiplist.h"
 #include <condition_variable>
+#include "skiplist.h"
+
 using namespace std;
 
 //큐에 들어가서 스레드가 이것을 가지고 식별합니다.
@@ -24,28 +25,19 @@ struct info {
     info(char c,int tg,int pr) : inst(c), target(tg), prereq(pr) {} 
 };
 
-constexpr int buf_size = 64;
 skiplist<int,int> list(0,INT_MAX); //SkipList
 CC_queue<info> task_queue; //Task를 관리하는 Concurrent Queue
 int BB_w = 0, BB_r = 0; //We divided Billboard into two part.
 mutex BB_wlock,BB_rlock; //Billboard lock.
-mutex temp_lock;
 condition_variable BB_w_cv, BB_r_cv;
-int gcnt = 0;
 vector<thread> V_thread;
 
 void thread_function(int lo) {
-    sleep(500);
     int local_cnt = 0;
     while(true) {
         info task;
         while(task_queue.Dequeue(&task) == -1); //task를 하나 가져왔음.
-        if(task.inst == 'p') {
-            unique_lock<mutex> lk(temp_lock);
-            gcnt += local_cnt;
-            lk.unlock();
-            return; //task가 p일 경우, 즉시 종료함.
-        }
+        if(task.inst == 'p') return ;
 
         if(task.inst == 'i') {
             unique_lock<mutex> rk(BB_rlock);
@@ -65,14 +57,15 @@ void thread_function(int lo) {
             wk.unlock();
             
             //read something.
-            //pair<int,int> ret = list.pair_find(task.target);
-            //cout << ret.first << " " << ret.second << "\n";
+            pair<int,int> ret = list.pair_find(task.target);
+            cout << ret.first << " " << ret.second << "\n";
 
             unique_lock<mutex> rk(BB_rlock);
             BB_r++;
             BB_r_cv.notify_all();
             rk.unlock();
         }
+        //cout << task.target << "\n";
         local_cnt++;
     }
     
@@ -118,15 +111,16 @@ int main(int argc,char* argv[]) {
             // wait until previous operations finish
             // No action will be acted.
         } else if (action == 'p') {     // wait
-            
-            task_queue.Dequeue(NULL);
+            for(int i=0; i<num_threads; i++) task_queue.Enqueue(info());
+            for(int i=0; i<num_threads; i++) V_thread[i].join();
+            cout << list.printList() << "\n";
+            for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
         } else {
             printf("ERROR: Unrecognized action: '%c'\n", action);
             exit(EXIT_FAILURE);
         }
 	    count++;
     }
-    cout << "Done to Enqueue queue!\n";
 
     fclose(fin);
     for(int i=0; i<num_threads; i++) task_queue.Enqueue(info());
@@ -134,7 +128,6 @@ int main(int argc,char* argv[]) {
 
     clock_gettime(CLOCK_REALTIME,&stop);
 
-    cout << "Total Procces Task : " << gcnt << "\n";
     // print results
     double elapsed_time = (stop.tv_sec - start.tv_sec) + ((double) (stop.tv_nsec - start.tv_nsec))/BILLION ;
     cout << "Elapsed time: " << elapsed_time << " sec" << "\n";
