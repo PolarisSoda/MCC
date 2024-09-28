@@ -58,6 +58,7 @@ void thread_function(int lo) {
             
             //read something.
             pair<int,int> ret = list.pair_find(task.target);
+            if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << endl;
             cout << ret.first << " " << ret.second << "\n";
 
             unique_lock<mutex> rk(BB_rlock);
@@ -89,7 +90,7 @@ int main(int argc,char* argv[]) {
 
     // load input file
     FILE* fin = fopen(fn, "r");
-    char action, prev = 'A';
+    char action;
     long num;
     for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
 

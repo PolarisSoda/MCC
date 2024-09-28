@@ -124,7 +124,6 @@ public:
                 for(int level=1; level<=new_level; level++) {
                     previous[level]->forwards[level] = newNode;
                 }
-                //newNode->linked = true;
                 for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
                 break;
             } else {
