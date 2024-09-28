@@ -35,6 +35,7 @@ int gcnt = 0;
 vector<thread> V_thread;
 
 void thread_function(int lo) {
+    sleep(500);
     int local_cnt = 0;
     while(true) {
         info task;
