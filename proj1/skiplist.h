@@ -107,6 +107,7 @@ public:
                 }
                 if(currNode->forwards[level]->key == searchKey) same = true;
                 previous[level] = currNode;
+                if(previous[level] == NULL) cerr << "HERE IS THE PROBLEM?\n";
                 follower[level] = currNode->forwards[level];
             }
             if(same) return ; //CHECK DUPLICATE
@@ -116,11 +117,12 @@ public:
             bool error = false;
             for(int level=1; level<=new_level; level++) {
                 if(error) break;
+                if(previous[level] == NULL) cerr << "WHY NULL?\n";
                 previous[level]->node_lock.lock();
                 locked_level = level;
                 if(previous[level]->forwards[level] != follower[level]) error = true;
             }
-            /*
+
             if(!error) {
                 NodeType* newNode= new NodeType(searchKey,newValue);
                 for(int level=1; level<=new_level; level++) {
@@ -129,10 +131,11 @@ public:
                 for(int level=1; level<=new_level; level++) {
                     previous[level]->forwards[level] = newNode;
                 }
+                for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
+                break;
+            } else {
+                for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
             }
-            */
-            for(int i=1; i<=locked_level; i++) previous[i]->node_lock.unlock();
-            
         }
     }
  
