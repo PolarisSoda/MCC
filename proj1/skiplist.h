@@ -71,6 +71,7 @@ public:
         delete m_pTail;
     }
     
+    //어차피 모든 write가 된 다음에 하니까 상관 안씀.
     pair<K,K> pair_find(K searchKey) {
         NodeType* currNode = m_pHeader;
         for(int level=max_level; level>=1; level--) {

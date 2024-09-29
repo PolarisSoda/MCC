@@ -29,11 +29,10 @@ skiplist<int,int> list(0,INT_MAX); //SkipList
 CC_queue<info> task_queue; //Task를 관리하는 Concurrent Queue
 int BB_w = 0, BB_r = 0; //We divided Billboard into two part.
 mutex BB_wlock,BB_rlock; //Billboard lock.
-condition_variable BB_w_cv, BB_r_cv;
-vector<thread> V_thread;
+condition_variable BB_w_cv, BB_r_cv; //Billboard Condition Variables
+vector<thread> V_thread; //Thread List
 
 void thread_function(int lo) {
-    int local_cnt = 0;
     while(true) {
         info task;
         while(task_queue.Dequeue(&task) == -1); //task를 하나 가져왔음.
@@ -59,15 +58,13 @@ void thread_function(int lo) {
             //read something.
             pair<int,int> ret = list.pair_find(task.target);
             if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << endl;
-            cout << ret.first << " " << ret.second << "\n";
+            else cout << ret.first << " " << ret.second << "\n";
 
             unique_lock<mutex> rk(BB_rlock);
             BB_r++;
             BB_r_cv.notify_all();
             rk.unlock();
         }
-        //cout << task.target << "\n";
-        local_cnt++;
     }
     
 }
