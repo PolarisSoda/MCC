@@ -138,18 +138,13 @@ public:
         return ( m_pHeader->forwards[1] == m_pTail );
     }
  
-    std::string printList() {
-	    int i=0;
-        std::stringstream sstr;
+    void printList() {
         NodeType* currNode = m_pHeader->forwards[1];
-        while (currNode != m_pTail) {
-            //sstr << "(" << currNode->key << "," << currNode->value << ")" << endl;
-            sstr << currNode->key << " ";
+        while(currNode != m_pTail) {
+            cout << currNode->key << " ";
             currNode = currNode->forwards[1];
-	        i++;
-	        if(i>200) break;
         }
-        return sstr.str();
+        cout << "\n";
     }
  
     const int max_level;

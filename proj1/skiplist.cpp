@@ -31,6 +31,7 @@ int BB_w = 0, BB_r = 0; //We divided Billboard into two part.
 mutex BB_wlock,BB_rlock; //Billboard lock.
 condition_variable BB_w_cv, BB_r_cv; //Billboard Condition Variables
 vector<thread> V_thread; //Thread List
+mutex stdout_lock; //lock for some weird print.
 
 void thread_function(int lo) {
     while(true) {
@@ -57,8 +58,11 @@ void thread_function(int lo) {
             
             //read something.
             pair<int,int> ret = list.pair_find(task.target);
+
+            unique_lock<mutex> stdlk(stdout_lock);
             if(ret.first == -1) cout << "ERROR: Not Found: " << task.target << endl;
             else cout << ret.first << " " << ret.second << "\n";
+            stdlk.unlock();
 
             unique_lock<mutex> rk(BB_rlock);
             BB_r++;
@@ -96,12 +100,14 @@ int main(int argc,char* argv[]) {
     //write: 이전 read만 다 수행되었으면 수행할 수 있음.
     //read : 이전 write만 다 수행되었으면 수행할 수 있음.
 
-    while(fscanf(fin, "%c %ld\n", &action, &num) > 0) {
+    while(fscanf(fin, "%c", &action) > 0) {
         if(action == 'i') {
+            fscanf(fin, " %ld\n", &num);
             //insert(write)
             task_queue.Enqueue(info(action,num,r_count));
             w_count++;
         } else if (action == 'q') {
+            fscanf(fin, " %ld\n", &num);
             //query(read)
             task_queue.Enqueue(info(action,num,w_count));
             r_count++;
@@ -109,9 +115,14 @@ int main(int argc,char* argv[]) {
             // wait until previous operations finish
             // No action will be acted.
         } else if (action == 'p') {     // wait
+            char tt;
+            fscanf(fin,"%c",&tt);
+
             for(int i=0; i<num_threads; i++) task_queue.Enqueue(info());
             for(int i=0; i<num_threads; i++) V_thread[i].join();
-            cout << list.printList() << "\n";
+
+            list.printList();
+
             for(int i=0; i<num_threads; i++) V_thread[i] = thread(thread_function,i);
         } else {
             printf("ERROR: Unrecognized action: '%c'\n", action);
