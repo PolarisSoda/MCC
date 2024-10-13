@@ -1,0 +1,58 @@
+START BUILDING INDEX
+..........
+END BUILDING INDEX
+
+Build Time: 499.691 sec
+
+START QUERY
+END QUERY
+Query 0 KNN Results: 73026 67187 98072 98967 34735 9963 78013 62202 68629 64664 57764 59305 77099 14160 50464 44544 89809 24483 70729 67964 
+Query 1 KNN Results: 490 25364 95320 49166 8772 1030 20319 7402 33382 46252 46854 31148 27848 19952 11441 27968 6567 28620 50041 4241 
+Query 2 KNN Results: 78745 67739 70357 50078 88271 15610 33995 90537 213 45915 13037 20471 69279 95197 19314 47709 8102 40625 30847 32297 
+Query 3 KNN Results: 10676 8599 23388 29228 88506 79713 3762 50091 70706 15472 80506 55834 18610 40146 69997 35681 19669 23076 61981 41345 
+Query 4 KNN Results: 23559 82890 33228 33839 7490 81906 71983 80419 12640 22358 86773 62476 98007 57708 82233 14015 78730 80762 89439 57344 
+Thread 1 hnsw_time: 1.32776 sec
+Thread 2 hnsw_time: 0 sec
+Thread 3 hnsw_time: 0 sec
+Thread 4 hnsw_time: 0 sec
+Thread 5 hnsw_time: 0 sec
+Thread 6 hnsw_time: 0 sec
+Thread 7 hnsw_time: 0 sec
+Thread 8 hnsw_time: 0 sec
+Thread 9 hnsw_time: 0 sec
+Thread 10 hnsw_time: 0 sec
+Thread 11 hnsw_time: 0 sec
+Thread 12 hnsw_time: 0 sec
+Thread 13 hnsw_time: 0 sec
+Thread 14 hnsw_time: 0 sec
+Thread 15 hnsw_time: 0 sec
+Thread 16 hnsw_time: 0 sec
+Thread 17 hnsw_time: 0 sec
+Thread 18 hnsw_time: 0 sec
+Thread 19 hnsw_time: 0 sec
+Thread 20 hnsw_time: 0 sec
+Thread 21 hnsw_time: 0 sec
+Thread 22 hnsw_time: 0 sec
+Thread 23 hnsw_time: 0 sec
+Thread 24 hnsw_time: 0 sec
+Thread 25 hnsw_time: 0 sec
+Thread 26 hnsw_time: 0 sec
+Thread 27 hnsw_time: 0 sec
+Thread 28 hnsw_time: 0 sec
+Thread 29 hnsw_time: 0 sec
+Thread 30 hnsw_time: 0 sec
+Thread 31 hnsw_time: 0 sec
+Thread 32 hnsw_time: 0 sec
+Thread 33 hnsw_time: 0 sec
+Thread 34 hnsw_time: 0 sec
+Thread 35 hnsw_time: 0 sec
+Thread 36 hnsw_time: 0 sec
+Thread 37 hnsw_time: 0 sec
+Thread 38 hnsw_time: 0 sec
+Thread 39 hnsw_time: 0 sec
+Thread 40 hnsw_time: 0 sec
+Query Time: 1.32776 sec
+query/sec: 753.147
+
+Total Duration: 501.019 sec
+Average recall@K: 0.81535

@@ -1,0 +1,58 @@
+START BUILDING INDEX
+..........
+END BUILDING INDEX
+
+Build Time: 498.512 sec
+
+START QUERY
+END QUERY
+Query 0 KNN Results: 97511 55995 79005 74766 58473 62180 20641 53853 35779 4047 29115 77238 74214 96647 36062 91967 93682 78780 62135 65900 
+Query 1 KNN Results: 80686 14143 40574 18527 42606 8490 59719 73095 42044 82883 18787 1940 88239 11430 39464 44599 89380 81299 18395 82312 
+Query 2 KNN Results: 48441 758 73871 92980 76307 89518 13447 35997 65948 35616 21341 56024 35285 36423 86802 18997 12939 23205 76207 86500 
+Query 3 KNN Results: 52888 13888 76903 77474 53698 12049 67728 11289 42887 48363 55847 8281 52019 19638 65788 63324 72853 58995 96552 69661 
+Query 4 KNN Results: 29136 24579 174 18478 78945 35507 72554 44084 41170 8507 96160 5225 80779 98384 65076 46740 61515 91438 30641 31988 
+Thread 1 hnsw_time: 1.33503 sec
+Thread 2 hnsw_time: 0 sec
+Thread 3 hnsw_time: 0 sec
+Thread 4 hnsw_time: 0 sec
+Thread 5 hnsw_time: 0 sec
+Thread 6 hnsw_time: 0 sec
+Thread 7 hnsw_time: 0 sec
+Thread 8 hnsw_time: 0 sec
+Thread 9 hnsw_time: 0 sec
+Thread 10 hnsw_time: 0 sec
+Thread 11 hnsw_time: 0 sec
+Thread 12 hnsw_time: 0 sec
+Thread 13 hnsw_time: 0 sec
+Thread 14 hnsw_time: 0 sec
+Thread 15 hnsw_time: 0 sec
+Thread 16 hnsw_time: 0 sec
+Thread 17 hnsw_time: 0 sec
+Thread 18 hnsw_time: 0 sec
+Thread 19 hnsw_time: 0 sec
+Thread 20 hnsw_time: 0 sec
+Thread 21 hnsw_time: 0 sec
+Thread 22 hnsw_time: 0 sec
+Thread 23 hnsw_time: 0 sec
+Thread 24 hnsw_time: 0 sec
+Thread 25 hnsw_time: 0 sec
+Thread 26 hnsw_time: 0 sec
+Thread 27 hnsw_time: 0 sec
+Thread 28 hnsw_time: 0 sec
+Thread 29 hnsw_time: 0 sec
+Thread 30 hnsw_time: 0 sec
+Thread 31 hnsw_time: 0 sec
+Thread 32 hnsw_time: 0 sec
+Thread 33 hnsw_time: 0 sec
+Thread 34 hnsw_time: 0 sec
+Thread 35 hnsw_time: 0 sec
+Thread 36 hnsw_time: 0 sec
+Thread 37 hnsw_time: 0 sec
+Thread 38 hnsw_time: 0 sec
+Thread 39 hnsw_time: 0 sec
+Thread 40 hnsw_time: 0 sec
+Query Time: 1.33503 sec
+query/sec: 749.048
+
+Total Duration: 499.847 sec
+Average recall@K: 0.00035

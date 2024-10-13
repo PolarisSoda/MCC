@@ -1,0 +1,58 @@
+START BUILDING INDEX
+..........
+END BUILDING INDEX
+
+Build Time: 498.718 sec
+
+START QUERY
+END QUERY
+Query 0 KNN Results: 11971 17612 75954 52045 48385 11898 14678 70663 48193 93751 49495 61365 59678 97459 18425 96744 34920 70818 18033 7053 
+Query 1 KNN Results: 28321 3914 83735 10767 81472 31031 43371 5903 85985 58669 65619 45786 35021 28092 63565 28979 96399 40362 53780 86899 
+Query 2 KNN Results: 75525 52824 90673 67210 10151 40928 74298 97276 3609 23033 86381 53272 22881 90186 86690 67402 93635 70462 14384 11295 
+Query 3 KNN Results: 63617 76069 7825 96464 23139 7345 3779 22999 79224 34372 38737 75962 57234 60471 38445 80317 13039 28850 67623 34399 
+Query 4 KNN Results: 15766 26948 4956 22164 37194 58720 81566 10204 60733 19976 41552 19588 64567 71064 72969 40439 58099 95106 80826 47481 
+Thread 1 hnsw_time: 1.33622 sec
+Thread 2 hnsw_time: 0 sec
+Thread 3 hnsw_time: 0 sec
+Thread 4 hnsw_time: 0 sec
+Thread 5 hnsw_time: 0 sec
+Thread 6 hnsw_time: 0 sec
+Thread 7 hnsw_time: 0 sec
+Thread 8 hnsw_time: 0 sec
+Thread 9 hnsw_time: 0 sec
+Thread 10 hnsw_time: 0 sec
+Thread 11 hnsw_time: 0 sec
+Thread 12 hnsw_time: 0 sec
+Thread 13 hnsw_time: 0 sec
+Thread 14 hnsw_time: 0 sec
+Thread 15 hnsw_time: 0 sec
+Thread 16 hnsw_time: 0 sec
+Thread 17 hnsw_time: 0 sec
+Thread 18 hnsw_time: 0 sec
+Thread 19 hnsw_time: 0 sec
+Thread 20 hnsw_time: 0 sec
+Thread 21 hnsw_time: 0 sec
+Thread 22 hnsw_time: 0 sec
+Thread 23 hnsw_time: 0 sec
+Thread 24 hnsw_time: 0 sec
+Thread 25 hnsw_time: 0 sec
+Thread 26 hnsw_time: 0 sec
+Thread 27 hnsw_time: 0 sec
+Thread 28 hnsw_time: 0 sec
+Thread 29 hnsw_time: 0 sec
+Thread 30 hnsw_time: 0 sec
+Thread 31 hnsw_time: 0 sec
+Thread 32 hnsw_time: 0 sec
+Thread 33 hnsw_time: 0 sec
+Thread 34 hnsw_time: 0 sec
+Thread 35 hnsw_time: 0 sec
+Thread 36 hnsw_time: 0 sec
+Thread 37 hnsw_time: 0 sec
+Thread 38 hnsw_time: 0 sec
+Thread 39 hnsw_time: 0 sec
+Thread 40 hnsw_time: 0 sec
+Query Time: 1.33622 sec
+query/sec: 748.38
+
+Total Duration: 500.054 sec
+Average recall@K: 0.81665
