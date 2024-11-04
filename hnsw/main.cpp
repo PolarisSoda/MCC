@@ -176,7 +176,33 @@ int main(int argc, char* argv[]) {
 	int k = 20;
 	int numThreads = 40;
 	int workload = -1;
-	
+
+
+	while( (opt = getopt(argc, argv, "d:n:q:k:t:w:")) != -1) {
+		switch (opt) {
+			case 'd':
+				//dimensions = atoi(optarg);
+				break;
+			case 'n':
+				//numPoints = atoi(optarg);
+				break;
+			case 'q':
+				//numQueries = atoi(optarg);
+				break;
+			case 'k':
+			       	k = atoi(optarg);
+				break;
+			case 't':
+				numThreads = atoi(optarg);
+				break;
+			case 'w':
+				workload = atoi(optarg);
+				break;
+			default:
+				break;
+		}
+		opt_cnt++;
+	}
 	cout << opt_cnt << "!!" << endl;
 	if(argc < 2){
 		fprintf(stderr, "Usage: %s -k {number of nearest neighbors} -t {number of threads} -w {workload num} \nFor example, %s -k10 -t10 -w1\n", argv[0], argv[0]);
