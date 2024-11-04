@@ -7,6 +7,8 @@
 #include <set>
 #include <unordered_set>
 #include <vector>
+#include <omp.h>
+
 using namespace std;
 
 /*
@@ -115,26 +117,32 @@ void HNSWGraph::Insert(Item& q) {
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
-	for (int i = min(l, maxLyer); i >= 0; i--) {
-		int MM = l == 0 ? MMax0 : MMax;
-		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neighbor를 efConsturction만큼 찾는다.
-		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //최대 M개 까지의 이웃을 선택한다.
-		for (int n: selectedNeighbors) addEdge(n, nid, i); //그것으로 Edge를 추가하다.
+	#pragma omp parallel for
+    for (int i = min(l, maxLyer); i >= 0; i--) {
+        int MM = l == 0 ? MMax0 : MMax;
+        vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
+        vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin() + min(int(neighbors.size()), M)); // 최대 M개 까지의 이웃을 선택한다.
 
-		//모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
-		//여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
-		/*
-		for (int n: selectedNeighbors) {
-			if (layerEdgeLists[i][n].size() > MM) {
-				vector<pair<double, int>> distPairs;
-				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-				sort(distPairs.begin(), distPairs.end());
-				layerEdgeLists[i][n].clear();
-				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-			}
-		}
-		*/
-		ep = selectedNeighbors[0];
-	}
+        #pragma omp critical
+        {
+            for (int n : selectedNeighbors) addEdge(n, nid, i); // 그것으로 Edge를 추가하다.
+        }
+
+        // 모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
+        // 여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
+        #pragma omp critical
+        {
+            for (int n : selectedNeighbors) {
+                if (layerEdgeLists[i][n].size() > MM) {
+                    vector<pair<double, int>> distPairs;
+                    for (int nn : layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+                    sort(distPairs.begin(), distPairs.end());
+                    layerEdgeLists[i][n].clear();
+                    for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+                }
+            }
+        }
+        ep = selectedNeighbors[0];
+    }
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
