@@ -75,7 +75,6 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "START BUILDING INDEX" << endl;
 
 	//Original 20 30 30 30 4
-	#pragma omp parallel for
 	HNSWGraph myHNSWGraph(20, 10000, 10000, 50, 20); //We are Able to modify this parameters.
 	// Number of neighbors
 	// Max number of neighbors in layers >= 1
@@ -99,6 +98,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 		}
 	}
 	*/
+	#pragma omp parallel for
 	for(int i=0; i<numItems; i++) {
 		if(i % 10000 == 0) cout << "." << std::flush;
 		myHNSWGraph.Insert(randomItems[i]);
