@@ -97,27 +97,27 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 */
 
 void HNSWGraph::Insert(Item& q) {
-	int nid = items.size();
-	itemNum++; items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
+    int nid = items.size();
+    itemNum++; items.push_back(q); // item을 넣고 item에 번호를 부여해준다.
 
-	// sample layer
-	int maxLyer = layerEdgeLists.size() - 1;
-	int l = 0;
-	uniform_real_distribution<double> distribution(0.0,1.0);
-	while(l < ml && (1.0 / ml <= distribution(generator))) {
-		l++;
-		if (layerEdgeLists.size() <= l) layerEdgeLists.push_back(unordered_map<int, vector<int>>());
-	}
-	if (nid == 0) {
-		enterNode = nid;
-		return;
-	}
-	// Until Here is Safe though.
+    // sample layer
+    int maxLyer = layerEdgeLists.size() - 1;
+    int l = 0;
+    uniform_real_distribution<double> distribution(0.0, 1.0);
+    while (l < ml && (1.0 / ml <= distribution(generator))) {
+        l++;
+        if (layerEdgeLists.size() <= l) layerEdgeLists.push_back(unordered_map<int, vector<int>>());
+    }
+    if (nid == 0) {
+        enterNode = nid;
+        return;
+    }
 
-	// search up layer entrance
-	int ep = enterNode;
-	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
-	#pragma omp parallel for
+    // search up layer entrance
+    int ep = enterNode;
+    for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
+
+    #pragma omp parallel for
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
         vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
@@ -144,5 +144,5 @@ void HNSWGraph::Insert(Item& q) {
         }
         ep = selectedNeighbors[0];
     }
-	if (l == layerEdgeLists.size() - 1) enterNode = nid;
+    if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
