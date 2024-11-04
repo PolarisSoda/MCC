@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
 				//numQueries = atoi(optarg);
 				break;
 			case 'k':
-			       	k = atoi(optarg);
+			    k = atoi(optarg);
 				break;
 			case 't':
 				numThreads = atoi(optarg);
@@ -203,7 +203,8 @@ int main(int argc, char* argv[]) {
 		}
 		opt_cnt++;
 	}
-	cout << opt_cnt << "!!" << endl;
+
+	cout << k << " " << numThreads << " " << workload << endl;
 	if(argc < 2){
 		fprintf(stderr, "Usage: %s -k {number of nearest neighbors} -t {number of threads} -w {workload num} \nFor example, %s -k10 -t10 -w1\n", argv[0], argv[0]);
 		exit(0);
