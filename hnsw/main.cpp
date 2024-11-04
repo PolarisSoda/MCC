@@ -74,10 +74,32 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	double begin_build = omp_get_wtime();
 	cout << "START BUILDING INDEX" << endl;
 
-	HNSWGraph myHNSWGraph(20, 30, 30, 30, 4);
-   
-	for (int i = 0; i < numItems; i++) {
-		if (i % 10000 == 0) cout << "." << std::flush;
+	//Original 20 30 30 30 4
+	HNSWGraph myHNSWGraph(30, 50, 100, 100, 40); //We are Able to modify this parameters.
+	// Number of neighbors
+	// Max number of neighbors in layers >= 1
+	// Max number of neighbors in layers 0
+	// Search numbers in construction
+	// Max number of layers
+	
+	/*
+	int item_num = 0;
+	#pragma omp parallel shared(item_num)
+	{
+		#pragma omp single
+		{
+			for(; item_num<numItems; item_num++) {
+				if(item_num % 10000 == 0) cout << "." << std::flush;
+				#pragma omp task firstprivate(item_num)
+				{
+					myHNSWGraph.Insert(randomItems[item_num]);
+				}
+			}
+		}
+	}
+	*/
+	for(int i=0; i<numItems; i++) {
+		if(i % 10000 == 0) cout << "." << std::flush;
 		myHNSWGraph.Insert(randomItems[i]);
 	}
 	cout << endl;
@@ -177,9 +199,8 @@ int main(int argc, char* argv[]) {
 	int numThreads = 40;
 	int workload = -1;
 
-
-	while( (opt = getopt(argc, argv, "d:n:q:k:t:w:")) != -1) {
-		switch (opt) {
+	while((opt = getopt(argc, argv, "d:n:q:k:t:w:")) != -1) {
+		switch(opt) {
 			case 'd':
 				//dimensions = atoi(optarg);
 				break;
@@ -204,7 +225,6 @@ int main(int argc, char* argv[]) {
 		opt_cnt++;
 	}
 
-	cout << k << " " << numThreads << " " << workload << endl;
 	if(argc < 2){
 		fprintf(stderr, "Usage: %s -k {number of nearest neighbors} -t {number of threads} -w {workload num} \nFor example, %s -k10 -t10 -w1\n", argv[0], argv[0]);
 		exit(0);

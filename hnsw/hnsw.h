@@ -19,7 +19,7 @@ struct Item {
 	double dist(Item& other) {
 		double result = 0.0;
 		int sz = (int)values.size();
-		
+
 		for (int i=0; i<sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
@@ -61,6 +61,8 @@ struct HNSWGraph {
 	void Insert(Item& q);
 	vector<int> KNNSearch(Item& q, int K);
 
+
+	// This will not be used....
 	void printGraph() {
 		for (int l = 0; l < layerEdgeLists.size(); l++) {
 			cout << "Layer:" << l << endl;
