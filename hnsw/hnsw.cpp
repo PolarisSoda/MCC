@@ -123,6 +123,7 @@ void HNSWGraph::Insert(Item& q) {
 
 		//모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
 		//여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
+		/*
 		for (int n: selectedNeighbors) {
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
@@ -132,6 +133,7 @@ void HNSWGraph::Insert(Item& q) {
 				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
 		}
+		*/
 		ep = selectedNeighbors[0];
 	}
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
