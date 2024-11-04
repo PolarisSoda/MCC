@@ -110,7 +110,8 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
-	
+	// Until Here is Safe though.
+
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
@@ -121,6 +122,7 @@ void HNSWGraph::Insert(Item& q) {
 		for (int n: selectedNeighbors) addEdge(n, nid, i); //그것으로 Edge를 추가하다.
 
 		//모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
+		//여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
 		for (int n: selectedNeighbors) {
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
