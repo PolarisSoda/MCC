@@ -15,6 +15,7 @@
 #include <shared_mutex>
 
 using namespace std;
+
 vector<Item> loadFile(const string& filename, int numItems, int dim) {
 	vector<Item> items;
 	ifstream file(filename, ios::binary);
@@ -165,6 +166,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "Average recall@K: " << average_recall << endl;
 
 }
+
 int main(int argc, char* argv[]) {
 	int opt;
 	int opt_cnt = 0;

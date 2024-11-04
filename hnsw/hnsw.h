@@ -5,15 +5,25 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+
 using namespace std;
 
 struct Item {
-	Item(vector<double> _values):values(_values) {}
+	// Constructor
+	Item(vector<double> _values) : values(_values) {}
 	vector<double> values;
+
 	// Assume L2 distance
+	// [ADDED] Can i do openmp with it?
+	
 	double dist(Item& other) {
 		double result = 0.0;
-		for (int i = 0; i < values.size(); i++) result += (values[i] - other.values[i]) * (values[i] - other.values[i]);
+		int sz = (int)values.size();
+		
+		for (int i=0; i<sz; i++) {
+			double diff = values[i] - other.values[i];
+			result += diff * diff;
+		}
 		return result;
 	}
 };

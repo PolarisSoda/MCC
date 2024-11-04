@@ -35,6 +35,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			}
 		}
 	}
+	cout << "STart" << endl;
 	vector<int> results;
 	for(auto &p: nearestNeighbors) results.push_back(p.second);
 	return results;
