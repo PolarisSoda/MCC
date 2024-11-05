@@ -20,7 +20,13 @@ struct Item {
 		double result = 0.0;
 		int sz = (int)values.size();
 
-		for (int i=0; i<sz; i++) {
+		// Ensure both items have the same dimension
+		if (sz != other.values.size()) {
+			cerr << "Dimension mismatch: " << sz << " vs " << other.values.size() << endl;
+			exit(1); // or handle the error appropriately
+		}
+
+		for (int i = 0; i < sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
 		}
