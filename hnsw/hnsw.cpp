@@ -65,7 +65,7 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 
 void HNSWGraph::Insert(Item& q) {
 	int nid;
-
+	Item nowq = q;
 	#pragma omp critical (vector)
 	{
 		nid = items.size();
@@ -89,10 +89,10 @@ void HNSWGraph::Insert(Item& q) {
 
 	// search up layer entrance
 	int ep = enterNode;
-	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
+	for (int i = maxLyer; i > l; i--) ep = searchLayer(nowq, ep, 1, i)[0];
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
-        vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
+        vector<int> neighbors = searchLayer(nowq, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
         vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin() + min(int(neighbors.size()), M)); // 최대 M개 까지의 이웃을 선택한다.
 
         #pragma omp critical
