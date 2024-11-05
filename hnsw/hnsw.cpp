@@ -71,12 +71,11 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 }
 
 void HNSWGraph::Insert(Item& q) {
-	Item now = q;
-
 	int nid;
 
 	#pragma omp critical(item_vector)
 	{
+		cout << &q << " " << omp_get_thread_num() << endl;
 		cout << "?" << q.values.size() << endl;
 		nid = items.size();
 		itemNum++;
@@ -101,9 +100,9 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) {
 		#pragma omp critical(printer)
 		{
-			cout << &now << endl;
+			cout << &q << endl;
 		}
-		ep = searchLayer(now, ep, 1, i)[0];
+		ep = searchLayer(q, ep, 1, i)[0];
 	}
 
 	return;
