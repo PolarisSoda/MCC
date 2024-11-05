@@ -99,7 +99,6 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	}
 	*/
 
-	#pragma omp parallel for
 	for(int i=0; i<numItems; i++) {
 		if(i % 10000 == 0) cout << "." << std::flush;
 		myHNSWGraph.Insert(randomItems[i]);
