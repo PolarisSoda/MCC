@@ -82,6 +82,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	// Search numbers in construction
 	// Max number of layers
 	
+	/*
 	int item_num = 0;
 	#pragma omp parallel shared(item_num)
 	{
@@ -96,12 +97,11 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 			}
 		}
 	}
-	/*
+	*/
 	for(int i=0; i<numItems; i++) {
 		if(i % 10000 == 0) cout << "." << std::flush;
 		myHNSWGraph.Insert(randomItems[i]);
 	}
-	*/
 	cout << endl;
 
 	cout << "END BUILDING INDEX" << endl << endl;
