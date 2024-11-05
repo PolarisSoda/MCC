@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 #include <omp.h>
-#include <queue>
+#include <concurrent_priority_queue.h>
 
 using namespace std;
 
