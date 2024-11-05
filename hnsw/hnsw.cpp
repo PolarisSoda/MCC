@@ -8,10 +8,12 @@
 #include <unordered_set>
 #include <vector>
 #include <omp.h>
+#include <queue>
 
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
+	concurrent_priority_queue<pair<double, int>> tr; //후보군
 	set<pair<double, int>> candidates; //후보군
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor?
 	unordered_set<int> isVisited; //방문했다.
@@ -86,10 +88,12 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 
 void HNSWGraph::Insert(Item& q) {
 	int nid;
+
 	#pragma omp critical (vector)
 	{
 		nid = items.size();
-		itemNum++; items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
+		itemNum++; 
+		items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
 	}
 	
 	// sample layer
