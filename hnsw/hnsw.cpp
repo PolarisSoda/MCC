@@ -38,7 +38,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
 
-			#pragma omp critical{
+			#pragma omp critical
+			{
 				if ((td < fi->first) || nearestNeighbors.size() < ef) {
 					candidates.insert(make_pair(td, ed));
 					nearestNeighbors.insert(make_pair(td, ed));
