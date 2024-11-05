@@ -1,6 +1,5 @@
 #ifndef HNSW_H
 #define HNSW_H
-
 #include <random>
 #include <vector>
 #include <unordered_map>
