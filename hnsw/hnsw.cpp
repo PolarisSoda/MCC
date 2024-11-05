@@ -85,9 +85,13 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 */
 
 void HNSWGraph::Insert(Item& q) {
-	int nid = items.size();
-	itemNum++; items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
-
+	int nid;
+	#pragma omp critical (vector)
+	{
+		nid = items.size();
+		itemNum++; items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
+	}
+	
 	// sample layer
 	int maxLyer = layerEdgeLists.size() - 1;
 	int l = 0;
