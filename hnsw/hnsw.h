@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <atomic>
+#include <omp.h>
 
 using namespace std;
 
