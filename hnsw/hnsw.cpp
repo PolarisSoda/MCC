@@ -75,8 +75,6 @@ void HNSWGraph::Insert(Item& q) {
 
 	#pragma omp critical(item_vector)
 	{
-		cout << &q << " " << omp_get_thread_num() << endl;
-		cout << "?" << q.values.size() << endl;
 		nid = items.size();
 		itemNum++;
 		items.push_back(q);
@@ -94,12 +92,13 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
-	return;
+
 	// search up layer entrance
 	int ep = enterNode;
 	#pragma omp critical(searcher)
 	{
 		for (int i = maxLyer; i > l; i--) {
+			cout << omp_get_thread_num() << " " << &q << endl;
 			ep = searchLayer(q, ep, 1, i)[0];
 		}
 	}
