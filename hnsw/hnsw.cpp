@@ -13,11 +13,13 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
+	Item item_ep = items[ep];
+
 	set<pair<double, int>> candidates; //후보군 this is local
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
 
-	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
+	double td = q.dist(item_ep); //item q와 items[ep]간의 거리.
 
 	candidates.insert(make_pair(td, ep));
 	nearestNeighbors.insert(make_pair(td, ep));
@@ -84,20 +86,13 @@ void HNSWGraph::Insert(Item& q) {
 	if (nid == 0) {
 		enterNode = nid;
 		return;
-	}
+	} // This can be modified as well.
 
 	// search up layer entrance
 	int ep = enterNode;
-
-	#pragma omp critical (search)
-	{
-		for (int i = maxLyer; i > l; i--) {
-			vector<int> temp = searchLayer(q,ep,1,i);
-			if(temp.size() == 0) cout << "WHY?" << endl;
-			else ep = searchLayer(q, ep, 1, i)[0];
-		}
+	for (int i = maxLyer; i > l; i--) {
+		ep = searchLayer(q, ep, 1, i)[0];
 	}
-	
 	return;
 
     for (int i = min(l, maxLyer); i >= 0; i--) {
