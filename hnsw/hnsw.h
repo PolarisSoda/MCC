@@ -23,7 +23,11 @@ struct Item {
 
 		// Ensure both items have the same dimension
 		if (sz != other.values.size()) {
-			cerr << "Dimension mismatch: " << sz << " vs " << other.values.size() << endl;
+			#pragma omp critical(printer)
+			{
+				cerr << "Dimension mismatch: " << sz << " vs " << other.values.size() << endl;
+			}
+			
 			exit(1); // or handle the error appropriately
 		}
 
