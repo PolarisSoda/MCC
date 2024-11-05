@@ -17,14 +17,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
 
-	double td;
-	#pragma omp critical(item_vector)
-	{	
-		cout << "!" << q.values.size() << endl;
-		if(ep >= items.size()) cout << "WRONG INDEX" << endl;
-		td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
-	}
-	return vector<int>();
+	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
 
 	candidates.insert(make_pair(td, ep));
 	nearestNeighbors.insert(make_pair(td, ep));
@@ -81,7 +74,7 @@ void HNSWGraph::Insert(Item& q) {
 	}
 
 	// sample layer
-	int maxLyer = layerEdgeLists.size() - 1;
+	int maxLyer = layerEdgeLists.size() - 1; //I think it should be locked.
 	int l = 0;
 	uniform_real_distribution<double> distribution(0.0,1.0);
 	while(l < ml && (1.0 / ml <= distribution(generator))) {
