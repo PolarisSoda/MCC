@@ -17,9 +17,14 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
 
-	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
-	return vector<int>(1, ep);
-	
+	double td;
+	#pragma omp critical(item_vector)
+	{
+		if(ep >= items.size()) cout << "WRONG INDEX" << endl;
+		td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
+	}
+	return vector<int>();
+
 	candidates.insert(make_pair(td, ep));
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
