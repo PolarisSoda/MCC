@@ -19,7 +19,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 	double td;
 	#pragma omp critical(item_vector)
-	{
+	{	
+		cout << q.values.size() << endl;
 		if(ep >= items.size()) cout << "WRONG INDEX" << endl;
 		td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
 	}
@@ -95,7 +96,7 @@ void HNSWGraph::Insert(Item& q) {
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(items[nid], ep, 1, i)[0];
-	
+
 	return;
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
