@@ -38,6 +38,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		if(ci->first > fi->first) break; //만약 neareastNeighbor의 가장 큰값보다 candidate가 크면 죽는다.
 
 		//lc는 현재 레이어의 층수를 말하는 것이다.
+		omp_set_lock(&layer_lock[lc]);
 		for(int ed: layerEdgeLists[lc][nid]) {
 			if(isVisited.find(ed) != isVisited.end()) continue; //중복 체크.
 
@@ -50,6 +51,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				if(nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
+		omp_unset_lock(&layer_lock[lc]);
 	}
 
 	vector<int> results;
@@ -66,8 +68,10 @@ vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
 
 void HNSWGraph::addEdge(int st, int ed, int lc) {
 	if (st == ed) return;
+	omp_set_lock(&layer_lock[lc]);
 	layerEdgeLists[lc][st].push_back(ed);
 	layerEdgeLists[lc][ed].push_back(st);
+	omp_unset_lock(&layer_lock[lc]);
 }
 
 void HNSWGraph::Insert(Item& q) {
@@ -108,8 +112,8 @@ void HNSWGraph::Insert(Item& q) {
 
         // 모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
         // 여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
-		/*
 		for (int n : selectedNeighbors) {
+			omp_set_lock(&layer_lock[i]);
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
 				for (int nn : layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
@@ -117,8 +121,8 @@ void HNSWGraph::Insert(Item& q) {
 				layerEdgeLists[i][n].clear();
 				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
+			omp_unset_lock(&layer_lock[i]);
 		}
-		*/
         ep = selectedNeighbors[0];
     }
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;

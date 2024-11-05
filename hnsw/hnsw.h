@@ -48,6 +48,8 @@ struct Item {
 struct HNSWGraph {
 	HNSWGraph(int _M, int _MMax, int _MMax0, int _efConstruction, int _ml):M(_M),MMax(_MMax),MMax0(_MMax0),efConstruction(_efConstruction),ml(_ml){
 		layerEdgeLists.push_back(unordered_map<int, vector<int>>());
+		layer_lock = vector<omp_lock_t>(ml);
+		for(int i=0; i<ml; i++) omp_init_lock(&layer_lock[i]);
 	}
 	
 	// Number of neighbors
@@ -60,6 +62,8 @@ struct HNSWGraph {
 	int efConstruction;
 	// Max number of layers
 	int ml;
+
+	vector<omp_lock_t> layer_lock;
 
 	// number of items
 	atomic<int> itemNum = 0;
