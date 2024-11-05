@@ -78,10 +78,11 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
+	return;
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
-	
+
 	for (int i = min(l, maxLyer); i >= 0; i--) {
 		int MM = l == 0 ? MMax0 : MMax;
 		vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
