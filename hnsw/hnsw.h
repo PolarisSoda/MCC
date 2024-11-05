@@ -18,10 +18,7 @@ struct Item {
 	// [ADDED] Can i do openmp with it?
 	
 	Item& operator=(const Item& other) {
-		cout << "HELLO" << flush;
-        if (this != &other) {
-            values = other.values;
-        }
+        if(this != &other) values = other.values;
         return *this;
     }
 
