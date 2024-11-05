@@ -14,10 +14,7 @@ using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	Item item_ep = items[ep];
-	#pragma omp critical (item)
-	{
-		item_ep = items[ep];
-	}
+	
 	#pragma omp critical (printer)
 	{
 		cout << &item_ep << " " << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << " " << lc << "!" << endl;
