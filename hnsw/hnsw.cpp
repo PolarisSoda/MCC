@@ -75,6 +75,7 @@ void HNSWGraph::Insert(Item& q) {
 
 	#pragma omp critical(item_vector)
 	{
+		cout << &q << endl;
 		cout << "?" << q.values.size() << endl;
 		nid = items.size();
 		itemNum++;
