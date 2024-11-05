@@ -99,8 +99,9 @@ void HNSWGraph::Insert(Item& q) {
 	#pragma omp critical (search)
 	{
 		for (int i = maxLyer; i > l; i--) {
-			cout << omp_get_thread_num() << " " << &q << endl;
-			ep = searchLayer(q, ep, 1, i)[0];
+			vector<int> temp = searchLayer(q,ep,1,i);
+			if(temp.size() == 0) cout << "WHY?" << endl;
+			else ep = searchLayer(q, ep, 1, i)[0];
 		}
 	}
 	
