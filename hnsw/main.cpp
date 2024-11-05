@@ -192,7 +192,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 
 int main(int argc, char* argv[]) {
 	omp_set_nested(1);
-	omp_set_num_threads(4);
+	omp_set_num_threads(2);
 
 	int opt;
 	int opt_cnt = 0;
