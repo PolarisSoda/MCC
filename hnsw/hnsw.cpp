@@ -70,6 +70,7 @@ void HNSWGraph::Insert(Item& q) {
 	{
 		nid = items.size();
 		itemNum++; 
+		cout << q.values.size() << endl;
 		items.push_back(q); //item을 넣고 item에 번호를 부여해준다일까요.
 	}
 	
