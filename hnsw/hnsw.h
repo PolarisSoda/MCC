@@ -11,6 +11,7 @@ using namespace std;
 
 struct Item {
 	// Constructor
+	Item() : values(vector<double>()) {}
 	Item(vector<double> _values) : values(_values) {}
 	vector<double> values;
 

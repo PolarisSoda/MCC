@@ -13,12 +13,13 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	Item item_ep = items[ep]; //DeepCopy....
+	Item item_ep;
 
-	#pragma omp critical (printer)
+	#pragma omp critical (item_vector)
 	{
-		cout << &item_ep << " " << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << " " << lc << "!" << endl;
+		item_ep = items[ep]; //DeepCopy
 	}
+
 	set<pair<double, int>> candidates; //후보군 this is local
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
@@ -72,7 +73,7 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 void HNSWGraph::Insert(Item& q) {
 	int nid;
 
-	#pragma omp critical(item_vector)
+	#pragma omp critical (item_vector)
 	{
 		nid = items.size();
 		itemNum++;
@@ -97,6 +98,7 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) {
 		ep = searchLayer(q, ep, 1, i)[0];
 	}
+
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
         vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
@@ -106,6 +108,7 @@ void HNSWGraph::Insert(Item& q) {
 
         // 모든 이웃에 대해서 가지고 있는 이웃의 숫자가 MM보다 크다면
         // 여기서 지워지는데 참조하므로 segfault가 발생할 가능성이 크다.
+		/*
 		for (int n : selectedNeighbors) {
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
@@ -115,6 +118,7 @@ void HNSWGraph::Insert(Item& q) {
 				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
 		}
+		*/
         ep = selectedNeighbors[0];
     }
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
