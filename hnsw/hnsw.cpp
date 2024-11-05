@@ -94,7 +94,7 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
-
+	return;
 	// search up layer entrance
 	int ep = enterNode;
 	#pragma omp critical(searcher)
