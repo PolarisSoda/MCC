@@ -13,8 +13,8 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	Item item_ep = items[ep];
-	
+	Item item_ep = items[ep]; //DeepCopy....
+
 	#pragma omp critical (printer)
 	{
 		cout << &item_ep << " " << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << " " << lc << "!" << endl;
@@ -97,8 +97,6 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) {
 		ep = searchLayer(q, ep, 1, i)[0];
 	}
-	return;
-
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
         vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.
