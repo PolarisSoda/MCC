@@ -20,7 +20,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	double td;
 	#pragma omp critical(item_vector)
 	{	
-		cout << q.values.size() << endl;
+		cout << "!" << q.values.size() << endl;
 		if(ep >= items.size()) cout << "WRONG INDEX" << endl;
 		td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
 	}
