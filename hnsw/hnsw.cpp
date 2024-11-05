@@ -13,6 +13,7 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
+	cout << ep << endl;
 	Item item_ep = items[ep];
 
 	set<pair<double, int>> candidates; //후보군 this is local
