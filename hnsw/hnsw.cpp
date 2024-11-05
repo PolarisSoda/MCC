@@ -8,17 +8,20 @@
 #include <unordered_set>
 #include <vector>
 #include <omp.h>
-#include <concurrent_priority_queue.h>
 
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	concurrent_priority_queue<pair<double, int>> tr; //후보군
 	set<pair<double, int>> candidates; //후보군
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor?
 	unordered_set<int> isVisited; //방문했다.
 
-	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
+	double td;
+	#pragma omp critical(vector)
+	{
+		td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
+	}
+	
 	candidates.insert(make_pair(td, ep));
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
@@ -36,7 +39,10 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 			fi = nearestNeighbors.end(); fi--;
 			isVisited.insert(ed);
-			td = q.dist(items[ed]);
+			#pragma omp critical(vector)
+			{
+				td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
+			}
 			if ((td < fi->first) || nearestNeighbors.size() < ef) {
 				candidates.insert(make_pair(td, ed));
 				nearestNeighbors.insert(make_pair(td, ed));
