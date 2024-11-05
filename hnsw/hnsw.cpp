@@ -13,10 +13,13 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	cout << ep << endl;
+	
+	
 	Item item_ep = items[ep];
-	cout << item_ep.values.size() << "!" << endl;
-
+	#pragma omp critical (printer)
+	{
+		cout << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << "!" << endl;
+	}
 	set<pair<double, int>> candidates; //후보군 this is local
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
