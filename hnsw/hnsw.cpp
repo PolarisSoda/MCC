@@ -18,13 +18,13 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	Item item_ep = items[ep];
 	#pragma omp critical (printer)
 	{
-		cout << &item_ep << " " << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << " " << lc << "!" << endl;
+		cout << &items[ep] << " " << omp_get_thread_num() << " " << ep << " " << items[ep].values.size() << " " << lc << "!" << endl;
 	}
 	set<pair<double, int>> candidates; //후보군 this is local
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
 	unordered_set<int> isVisited; //방문했다. //this is local
 
-	double td = q.dist(item_ep); //item q와 items[ep]간의 거리.
+	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
 
 	candidates.insert(make_pair(td, ep));
 	nearestNeighbors.insert(make_pair(td, ep));
