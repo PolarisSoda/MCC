@@ -24,40 +24,44 @@ using namespace std;
 */
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	set<pair<double, int>> candidates; //후보군
-	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor?
-	unordered_set<int> isVisited; //방문했다.
+    set<pair<double, int>> candidates; // 후보군
+    set<pair<double, int>> nearestNeighbors; // 판명난 nearestNeighbor
+    unordered_set<int> isVisited; // 방문했다.
 
-	double td = q.dist(items[ep]); //item q와 items[ep]간의 거리.
-	candidates.insert(make_pair(td, ep));
-	nearestNeighbors.insert(make_pair(td, ep));
-	isVisited.insert(ep);
+    double td = q.dist(items[ep]); // item q와 items[ep]간의 거리.
+    candidates.insert(make_pair(td, ep));
+    nearestNeighbors.insert(make_pair(td, ep));
+    isVisited.insert(ep);
 
-	while(!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin()); //set에서 거리가 가장 작은 친구를 가져오고,
-		int nid = ci->second; // 그 친구의 nid를 적는다.
-		auto fi = nearestNeighbors.end(); fi--; //nearestNeightbor의 가장 끝의 iterator를 가져온다.
+    while (!candidates.empty()) {
+        auto ci = candidates.begin(); candidates.erase(candidates.begin()); // set에서 거리가 가장 작은 친구를 가져오고,
+        int nid = ci->second; // 그 친구의 nid를 적는다.
+        auto fi = nearestNeighbors.end(); fi--; // nearestNeighbor의 가장 끝의 iterator를 가져온다.
 
-		if(ci->first > fi->first) break; //만약 neareastNeighbor의 가장 큰값보다 candidate가 크면 죽는다.
+        if (ci->first > fi->first) break; // 만약 nearestNeighbor의 가장 큰값보다 candidate가 크면 죽는다.
 
-		//lc는 현재 레이어의 층수를 말하는 것이다.
-		for(int ed: layerEdgeLists[lc][nid]) {
-			if(isVisited.find(ed) != isVisited.end()) continue; //중복 체크.
+        // lc는 현재 레이어의 층수를 말하는 것이다.
+        for (int ed : layerEdgeLists[lc][nid]) {
+            if (isVisited.find(ed) != isVisited.end()) continue; // 중복 체크.
 
-			fi = nearestNeighbors.end(); fi--;
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
-				if(nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
-			}
-		}
-	}
+            fi = nearestNeighbors.end(); fi--;
+            isVisited.insert(ed);
+            td = q.dist(items[ed]);
+            if ((td < fi->first) || nearestNeighbors.size() < ef) {
+                candidates.insert(make_pair(td, ed));
+                nearestNeighbors.insert(make_pair(td, ed));
+                if (nearestNeighbors.size() > ef) {
+                    nearestNeighbors.erase(--nearestNeighbors.end());
+                }
+            }
+        }
+    }
 
-	vector<int> results;
-	for(auto &p: nearestNeighbors) results.push_back(p.second);
-	return results;
+    vector<int> results;
+    for (auto &p : nearestNeighbors) {
+        results.push_back(p.second);
+    }
+    return results;
 }
 
 vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
