@@ -17,6 +17,14 @@ struct Item {
 	// Assume L2 distance
 	// [ADDED] Can i do openmp with it?
 	
+	Item& operator=(const Item& other) {
+		cout << "HELLO" << flush;
+        if (this != &other) {
+            values = other.values;
+        }
+        return *this;
+    }
+
 	double dist(Item& other) {
 		double result = 0.0;
 		int sz = (int)values.size();

@@ -20,7 +20,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	}
 	#pragma omp critical (printer)
 	{
-		cout << &items[ep] << " " << omp_get_thread_num() << " " << ep << " " << items[ep].values.size() << " " << lc << "!" << endl;
+		cout << &item_ep << " " << omp_get_thread_num() << " " << ep << " " << item_ep.values.size() << " " << lc << "!" << endl;
 	}
 	set<pair<double, int>> candidates; //후보군 this is local
 	set<pair<double, int>> nearestNeighbors; //판명난 nearestNeighbor? this is local
