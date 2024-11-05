@@ -95,14 +95,13 @@ void HNSWGraph::Insert(Item& q) {
 
 	// search up layer entrance
 	int ep = enterNode;
-	#pragma omp for firstprivate(q)
+
 	for (int i = maxLyer; i > l; i--) {
 		cout << omp_get_thread_num() << " " << &q << endl;
 		ep = searchLayer(q, ep, 1, i)[0];
 	}
-	
-
 	return;
+	
     for (int i = min(l, maxLyer); i >= 0; i--) {
         int MM = l == 0 ? MMax0 : MMax;
         vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor를 efConstruction만큼 찾는다.

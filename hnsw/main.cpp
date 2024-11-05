@@ -83,28 +83,25 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	// Max number of layers
 	
 	/*
-	int item_num = 0;
-	#pragma omp parallel shared(item_num)
+	for(int i=0; i<numItems; i++) {
+		if(i % 10000 == 0) cout << "." << std::flush;
+		myHNSWGraph.Insert(randomItems[i]);
+	}
+	*/
+	#pragma omp parallel
 	{
 		#pragma omp single
 		{
-			for(; item_num<numItems; item_num++) {
-				if(item_num % 10000 == 0) cout << "." << std::flush;
-				#pragma omp task firstprivate(item_num)
-				{
-					myHNSWGraph.Insert(randomItems[item_num]);
-				}
-			}
+			for(int i=0; i<numItems; i++) {
+				if(i % 10000 == 0) cout << "." << std::flush;
+                #pragma omp task firstprivate(i)
+                {
+                    myHNSWGraph.Insert(randomItems[i]);
+                }
+            }
 		}
 	}
-	*/
 
-	int insert = 0;
-	#pragma omp parallel for shared(insert) 
-	for(int insert=0; insert<numItems; insert++) {
-		if(insert % 10000 == 0) cout << "." << std::flush;
-		myHNSWGraph.Insert(randomItems[insert]);
-	}
 	cout << endl;
 
 	cout << "END BUILDING INDEX" << endl << endl;
