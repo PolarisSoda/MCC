@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <atomic>
 
 using namespace std;
 
@@ -51,7 +52,7 @@ struct HNSWGraph {
 	int ml;
 
 	// number of items
-	int itemNum;
+	atomic<int> itemNum = 0;
 	// actual vector of the items
 	vector<Item> items;
 	// adjacent edge lists in each layer
