@@ -63,29 +63,6 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 	layerEdgeLists[lc][ed].push_back(st);
 }
 
-//
-/*
-// Number of neighbors
-	int M;
-	// Max number of neighbors in layers >= 1
-	int MMax;
-	// Max number of neighbors in layers 0
-	int MMax0;
-	// Search numbers in construction
-	int efConstruction;
-	// Max number of layers
-	int ml;
-
-	// number of items
-	int itemNum;
-	// actual vector of the items
-	vector<Item> items;
-	// adjacent edge lists in each layer
-	vector<unordered_map<int, vector<int>>> layerEdgeLists;
-	// enter node id
-	int enterNode;
-*/
-
 void HNSWGraph::Insert(Item& q) {
 	int nid;
 
