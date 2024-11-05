@@ -82,25 +82,24 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	// Search numbers in construction
 	// Max number of layers
 	
-	/*
 	for(int i=0; i<numItems; i++) {
 		if(i % 10000 == 0) cout << "." << std::flush;
 		myHNSWGraph.Insert(randomItems[i]);
 	}
-	*/
-	#pragma omp parallel
-	{
-		#pragma omp single
-		{
-			for(int i=0; i<numItems; i++) {
-				if(i % 10000 == 0) cout << "." << std::flush;
-                #pragma omp task firstprivate(i)
-                {
-                    myHNSWGraph.Insert(randomItems[i]);
-                }
-            }
-		}
-	}
+	
+	// #pragma omp parallel
+	// {
+	// 	#pragma omp single
+	// 	{
+	// 		for(int i=0; i<numItems; i++) {
+	// 			if(i % 10000 == 0) cout << "." << std::flush;
+    //             #pragma omp task firstprivate(i)
+    //             {
+    //                 myHNSWGraph.Insert(randomItems[i]);
+    //             }
+    //         }
+	// 	}
+	// }
 
 	cout << endl;
 
