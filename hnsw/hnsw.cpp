@@ -95,7 +95,7 @@ void HNSWGraph::Insert(Item& q) {
 
 	// search up layer entrance
 	int ep = enterNode;
-	#pragma omp for firstprivate(q,ep) lastprivate(ep)
+	#pragma omp for firstprivate(q)
 	for (int i = maxLyer; i > l; i--) {
 		cout << omp_get_thread_num() << " " << &q << endl;
 		ep = searchLayer(q, ep, 1, i)[0];
