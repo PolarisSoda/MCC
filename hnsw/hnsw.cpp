@@ -82,7 +82,6 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
-	return;
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
