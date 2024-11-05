@@ -30,6 +30,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if (ci->first > fi->first) break;
 
+		#pragma omp parallel for
 		for (int ed: layerEdgeLists[lc][nid]) {
 			if (isVisited.find(ed) != isVisited.end()) continue;
 
@@ -37,10 +38,12 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
 
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+			#pragma omp critical{
+				if ((td < fi->first) || nearestNeighbors.size() < ef) {
+					candidates.insert(make_pair(td, ed));
+					nearestNeighbors.insert(make_pair(td, ed));
+					if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+				}
 			}
 		}
 	}
