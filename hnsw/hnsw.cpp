@@ -40,36 +40,24 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> distances(sz);
 
-		{
-			std::unordered_set<int> localVisited;
+		for(int j=0; j<sz; j++) {
+			int ed = layerEdgeLists[lc][nid][j];
+			bool visited;
+			if (isVisited.find(ed) != isVisited.end()) continue;
 
-			#pragma omp for
-			for (int j = 0; j < sz; j++) {
-				int ed = layerEdgeLists[lc][nid][j];
-
-				// Check in thread-local visited set to prevent duplicate work
-				if (localVisited.find(ed) != localVisited.end() || isVisited.find(ed) != isVisited.end()) continue;
-				localVisited.insert(ed);  // Mark as visited in thread-local set
-
-				distances[j].distance = q.dist(items[ed]);
-				distances[j].id = ed;
-				distances[j].value = true;
-			}
-
-			// No need to merge `localVisited` into `isVisited` here, since we're not updating `isVisited` in parallel
+			distances[j].distance = q.dist(items[ed]);
+			distances[j].id = ed;
+			distances[j].value = true;
 		}
 
-		// Step 2: Serial section to update global isVisited and process candidates
-		for (auto tt : distances) {
-			if (!tt.value) continue;
-
-			isVisited.insert(tt.id); // Update global isVisited
-
+		for(auto tt : distances) {
+			if(tt.value == false) continue;
+			isVisited.insert(tt.id);
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
-				auto temp = make_pair(tt.distance, tt.id);
+				auto temp = make_pair(tt.distance,tt.id);
+				
 				candidates.insert(temp);
 				nearestNeighbors.insert(temp);
-
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
