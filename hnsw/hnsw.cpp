@@ -39,7 +39,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> distances(sz);
 
-		#pragma omp parallel for
+		#pragma omp parallel for shared(layerEdgeLists)
 		for(int j=0; j<sz; j++) {
 			int ed = layerEdgeLists[lc][nid][j];
 			bool visited;
