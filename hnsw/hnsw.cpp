@@ -39,7 +39,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> distances(sz);
 
-		#pragma omp parallel for shared(distances)
+		#pragma omp parallel for
 		for(int j=0; j<sz; j++) {
 			int ed = layerEdgeLists[lc][nid][j];
 			bool visited;
@@ -54,7 +54,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			distances[j].id = ed;
 			distances[j].value = true;
 		}
-
+		#pragma omp barrier
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
 			cout << "HELLO" << endl;
