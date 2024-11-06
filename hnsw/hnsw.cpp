@@ -102,7 +102,7 @@ void HNSWGraph::Insert(Item& q) {
 			}
 		}
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for(int j=0; j<sz; j++) { //연결한 Neighbor들을 전부 탐색하여
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
