@@ -29,7 +29,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if (ci->first > fi->first) break;
 
-		int sz = layerEdgeLists.size();
+		int sz = layerEdgeLists[lc][nid].size();
 
 		struct alignas(64) Aligned {
 			bool value = false;
@@ -38,6 +38,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			char padding[52];
 		};
 		vector<Aligned> distances(sz);
+
 
 		#pragma omp parallel for
 		for(int j=0; j<sz; j++) {
