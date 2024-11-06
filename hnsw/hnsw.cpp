@@ -49,12 +49,16 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		for(int j=0; j<sz; j++) {
 			int ed = cp_layerEdgeLists[j];
 			td = q.dist(items[ed]);
-
+			
+			bool visited;
 			#pragma omp critical (isVisited)
-			{
-				if (isVisited.find(ed) != isVisited.end()) continue;
-				isVisited.insert(ed);
+			{	
+
+				if(!(visited = (isVisited.find(ed) != isVisited.end()))) {
+					isVisited.insert(ed);
+				}
 			}
+			if(visited) continue;
 
 			if((td < fi_first) || nsz < ef) {
 				check_edge[j].value = true;
