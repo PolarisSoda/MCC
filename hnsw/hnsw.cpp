@@ -30,7 +30,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		if (ci->first > fi->first) break;
 
 		int sz = layerEdgeLists[lc][nid].size();
-		cout << sz << endl;
 
 		struct alignas(64) Aligned {
 			bool value = false;
@@ -58,7 +57,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
+			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				candidates.insert(make_pair(tt.distance, tt.id));
 				nearestNeighbors.insert(make_pair(tt.distance, tt.id));
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
