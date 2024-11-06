@@ -65,7 +65,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
-		cout << candidates.size() << endl;
 	}
 	vector<int> results;
 	for(auto &p: nearestNeighbors) results.push_back(p.second);
