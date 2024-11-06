@@ -13,34 +13,59 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> candidates;
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> nearestNeighbors;
+	set<pair<double, int>> candidates;
+	set<pair<double, int>> nearestNeighbors;
 	unordered_set<int> isVisited;
 
 	double td = q.dist(items[ep]);
-	candidates.push(make_pair(td, ep));
-	nearestNeighbors.push(make_pair(td, ep));
+	candidates.insert(make_pair(td, ep));
+	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
+
 	while (!candidates.empty()) {
-		auto ci = candidates.top(); candidates.pop();
-		int nid = ci.second;
-		auto fi = nearestNeighbors.top();
-		if (ci.first > fi.first) break;
-		for (int ed: layerEdgeLists[lc][nid]) {
-			if (isVisited.find(ed) != isVisited.end()) continue;
-			fi = nearestNeighbors.top();
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
-			if ((td < fi.first) || nearestNeighbors.size() < ef) {
-				candidates.push(make_pair(td, ed));
-				nearestNeighbors.push(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.pop();
+		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		int nid = ci->second;
+		auto fi = nearestNeighbors.end(); fi--;
+
+		if (ci->first > fi->first) break;
+
+		int sz = layerEdgeLists.size();
+
+		struct alignas(64) Aligned {
+			bool value = false;
+			double distance;
+			int id;
+			char padding[52];
+		};
+		vector<Aligned> distances(sz);
+
+		#pragma omp parallel for
+		for(int j=0; j<sz; j++) {
+			int ed = layerEdgeLists[lc][nid][j];
+			bool visited;
+			#pragma omp critical (isVisited)
+			{	
+				visited = (isVisited.find(ed) != isVisited.end());
+				if(visited) isVisited.insert(ed);
+			}
+			if(!visited) continue;
+
+			distances[j].distance = q.dist(items[ed]);
+			distances[j].id = ed;
+			distances[j].value = true;
+		}
+
+		for(auto tt : distances) {
+			if(tt.value == false) continue;
+			if ((td < fi->first) || nearestNeighbors.size() < ef) {
+				candidates.insert(make_pair(tt.distance, tt.id));
+				nearestNeighbors.insert(make_pair(tt.distance, tt.id));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
 	}
 	vector<int> results;
-	while(!nearestNeighbors.empty()) results.push_back(nearestNeighbors.top().second), nearestNeighbors.pop();
-	//for(auto &p: nearestNeighbors) results.push_back(p.second);
+	for(auto &p: nearestNeighbors) results.push_back(p.second);
 	return results;
 }
 
