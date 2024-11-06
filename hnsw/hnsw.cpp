@@ -13,32 +13,34 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	set<pair<double, int>> candidates;
-	set<pair<double, int>> nearestNeighbors;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> candidates;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> nearestNeighbors;
 	unordered_set<int> isVisited;
+
 	double td = q.dist(items[ep]);
-	candidates.insert(make_pair(td, ep));
-	nearestNeighbors.insert(make_pair(td, ep));
+	candidates.push(make_pair(td, ep));
+	nearestNeighbors.push(make_pair(td, ep));
 	isVisited.insert(ep);
 	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin());
-		int nid = ci->second;
-		auto fi = nearestNeighbors.end(); fi--;
-		if (ci->first > fi->first) break;
+		auto ci = candidates.top(); candidates.pop();
+		int nid = ci.second;
+		auto fi = nearestNeighbors.top();
+		if (ci.first > fi.first) break;
 		for (int ed: layerEdgeLists[lc][nid]) {
 			if (isVisited.find(ed) != isVisited.end()) continue;
-			fi = nearestNeighbors.end(); fi--;
+			fi = nearestNeighbors.top();
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+			if ((td < fi.first) || nearestNeighbors.size() < ef) {
+				candidates.push(make_pair(td, ed));
+				nearestNeighbors.push(make_pair(td, ed));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.pop();
 			}
 		}
 	}
 	vector<int> results;
-	for(auto &p: nearestNeighbors) results.push_back(p.second);
+	while(!nearestNeighbors.empty()) results.push_back(nearestNeighbors.top().second), nearestNeighbors.pop();
+	//for(auto &p: nearestNeighbors) results.push_back(p.second);
 	return results;
 }
 
