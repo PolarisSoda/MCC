@@ -13,22 +13,25 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	set<pair<double, int>> candidates;
-	set<pair<double, int>> nearestNeighbors;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> candidates;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> nearestNeighbors;
 	unordered_set<int> isVisited;
 
 	double td = q.dist(items[ep]);
 
-	candidates.insert(make_pair(td, ep));
-	nearestNeighbors.insert(make_pair(td, ep));
+	candidates.push(make_pair(td, ep));
+	nearestNeighbors.push(make_pair(td, ep));
 	isVisited.insert(ep);
 
 	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin()); //candidate중에서 제일 dist가 작은 친구 iterator를 가져온다.
-		int nid = ci->second; //dist가 가장 작은 친구의 nid를 가져온다.
-		auto fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
+		auto ci = candidates.top();
+		candidates.pop();
+		int nid = ci.second; //dist가 가장 작은 친구의 nid를 가져온다.
 
-		if (ci->first > fi->first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
+		auto fi = nearestNeighbors.top();
+		nearestNeighbors.pop();
+
+		if(ci.first > fi.first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
 		vector<int> cp_layerEdgeLists = layerEdgeLists[lc][nid];
 		int sz = cp_layerEdgeLists.size();
@@ -41,7 +44,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> check_edge(sz);
 
-		int fi_first = fi->first;
+		int fi_first = fi.first;
 		int nsz = nearestNeighbors.size();
 		int add_count = 0;
 
@@ -70,9 +73,9 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		for(int j=0; j<sz; j++) {
 			if(check_edge[j].value == false) continue;
-			candidates.insert(make_pair(check_edge[j].distance, check_edge[j].id));
-			nearestNeighbors.insert(make_pair(check_edge[j].distance, check_edge[j].id));
-			if(nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+			candidates.push(make_pair(check_edge[j].distance, check_edge[j].id));
+			nearestNeighbors.push(make_pair(check_edge[j].distance, check_edge[j].id));
+			if(nearestNeighbors.size() > ef) nearestNeighbors.pop();
 		}
 		
 

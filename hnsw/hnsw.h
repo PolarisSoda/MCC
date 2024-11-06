@@ -66,7 +66,7 @@ struct HNSWGraph {
 	vector<omp_lock_t> layer_lock;
 
 	vector<int> heights;
-	
+
 	// number of items
 	atomic<int> itemNum = 0;
 	// actual vector of the items
@@ -77,6 +77,17 @@ struct HNSWGraph {
 	int enterNode;
 
 	default_random_engine generator;
+
+	struct compare_greater {
+		bool operator()(pair<double,int> a,pair<double,int> b) {
+			return a.first < b.first;
+		}
+	};
+	struct compare_less {
+		bool operator()(pair<double,int> a,pair<double,int> b) {
+			return a.first > b.first;
+		}
+	};
 
 	// methods
 	void addEdge(int st, int ed, int lc);
