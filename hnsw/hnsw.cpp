@@ -58,6 +58,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
+			cout << omp_get_thread_num() << endl;
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				candidates.insert(make_pair(tt.distance, tt.id));
 				nearestNeighbors.insert(make_pair(tt.distance, tt.id));
