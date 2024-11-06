@@ -13,8 +13,8 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> candidates;
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> nearestNeighbors;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> candidates;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> nearestNeighbors;
 	unordered_set<int> isVisited;
 
 	double td = q.dist(items[ep]);
