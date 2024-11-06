@@ -40,6 +40,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> distances(sz);
 
+		#pragma omp parallel for shared(distances,layerEdgeLists)
 		for(int j=0; j<sz; j++) {
 			int ed = layerEdgeLists[lc][nid][j];
 			bool visited;
@@ -51,12 +52,12 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		}
 
 		for(auto tt : distances) {
-			fi = nearestNeighbors.end(); fi--;
 			if(tt.value == false) continue;
 			isVisited.insert(tt.id);
+			
+			fi = nearestNeighbors.end(); fi--;
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				auto temp = make_pair(tt.distance,tt.id);
-				
 				candidates.insert(temp);
 				nearestNeighbors.insert(temp);
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
