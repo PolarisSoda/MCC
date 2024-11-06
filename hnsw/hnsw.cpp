@@ -58,11 +58,10 @@ vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
 
 void HNSWGraph::addEdge(int st, int ed, int lc) {
 	if (st == ed) return;
-	#pragma omp critical (layer)
-	{
-		layerEdgeLists[lc][st].push_back(ed);
-		layerEdgeLists[lc][ed].push_back(st);
-	}	
+	omp_set_lock(&layer_lock[lc]);
+	layerEdgeLists[lc][st].push_back(ed);
+	layerEdgeLists[lc][ed].push_back(st);
+	omp_unset_lock(&layer_lock[lc]);
 }
 
 void HNSWGraph::Insert(Item& q) {
