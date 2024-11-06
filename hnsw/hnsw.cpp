@@ -47,18 +47,17 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			#pragma omp critical (isVisited)
 			{	
 				visited = (isVisited.find(ed) != isVisited.end());
-				isVisited.insert(ed);
 			}
 			if(visited) continue;
 
 			distances[j].distance = q.dist(items[ed]);
 			distances[j].id = ed;
 			distances[j].value = true;
-			cout << ed << endl;
 		}
 
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
+			isVisited.insert(tt.id);
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				auto temp = make_pair(tt.distance,tt.id);
 				
