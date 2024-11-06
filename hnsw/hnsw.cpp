@@ -23,7 +23,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	isVisited.insert(ep);
 
 	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		auto ci = candidates.begin(); 
+		candidates.erase(candidates.begin());
 		int nid = ci->second;
 		auto fi = nearestNeighbors.end(); fi--;
 
