@@ -91,6 +91,7 @@ void HNSWGraph::Insert(Item& q) {
 		// 	addEdge(n,nid,i);
 		// }
 		
+		#pragma omp parallel for num_threads(16)
 		for(int n : selectedNeighbors) {
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
