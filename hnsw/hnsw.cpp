@@ -23,7 +23,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	isVisited.insert(ep);
 
 	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		auto ci = candidates.begin(); 
+		candidates.erase(candidates.begin());
 		int nid = ci->second;
 		auto fi = nearestNeighbors.end(); fi--;
 
@@ -56,6 +57,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				auto temp = make_pair(tt.distance,tt.id);
 				
 				candidates.insert(temp);
+				cout << candidates.size() << endl;
 				nearestNeighbors.insert(temp);
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
