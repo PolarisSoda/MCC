@@ -107,7 +107,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	double build_time = omp_get_wtime() - begin_build;
 	
 	cout << "Build Time: " << build_time << " sec" << endl << endl;
-	return;
+	
 	// Query Phase
 	vector<double> hnsw_times(omp_get_max_threads(), 0.0);
 	vector<vector<int>> all_knns(numQueries);
