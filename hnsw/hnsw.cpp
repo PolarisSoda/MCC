@@ -24,32 +24,28 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	isVisited.insert(ep);
 
 	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin());
-		int nid = ci->second;
-		auto fi = nearestNeighbors.end(); fi--;
+		auto ci = candidates.begin(); candidates.erase(candidates.begin()); //candidate중에서 제일 dist가 작은 친구 iterator를 가져온다.
+		int nid = ci->second; //dist가 가장 작은 친구의 nid를 가져온다.
+		auto fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
 
-		if (ci->first > fi->first) break;
+		if (ci->first > fi->first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
-		#pragma omp parallel for
-		for (int ed: layerEdgeLists[lc][nid]) {
-			if (isVisited.find(ed) != isVisited.end()) continue;
+		for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다. 
+			if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
 
-			fi = nearestNeighbors.end(); fi--;
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
+			fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
+			isVisited.insert(ed); //visited 체크.
+			td = q.dist(items[ed]); //td를 더 짧은 거리로 업데이트 한다.
 
-			#pragma omp critical
-			{
-				if ((td < fi->first) || nearestNeighbors.size() < ef) {
-					candidates.insert(make_pair(td, ed));
-					nearestNeighbors.insert(make_pair(td, ed));
-					if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
-				}
+			if ((td < fi->first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
+				candidates.insert(make_pair(td, ed)); //cand에 집어넣고
+				nearestNeighbors.insert(make_pair(td, ed)); //neares에도 집어넣고
+				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
 			}
 		}
 	}
 	vector<int> results;
-	for(auto &p: nearestNeighbors) results.push_back(p.second);
+	for(auto &p: nearestNeighbors) results.push_back(p.second); //결론적으로 q와 가장 가까운 순서대로 neighbor들의 nid를 가져오게 된다.
 	return results;
 }
 
@@ -87,11 +83,22 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
 
 	for (int i = min(l, maxLyer); i >= 0; i--) {
-		int MM = l == 0 ? MMax0 : MMax;
-		vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
-		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
-		for (int n: selectedNeighbors) addEdge(n, nid, i);
-		for (int n: selectedNeighbors) {
+		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
+		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
+		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
+
+		// for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
+
+		int sz = selectedNeighbors.size();
+		#pragma omp parallel for
+		for(int j=0; j<sz; j++) {
+			int n = selectedNeighbors[j];
+			addEdge(n,nid,i);
+		}
+		
+		#pragma omp parallel for 
+		for(int j=0; j<sz; j++) {
+			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
 				vector<pair<double, int>> distPairs;
 				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
@@ -100,6 +107,16 @@ void HNSWGraph::Insert(Item& q) {
 				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
 		}
+
+		// for (int n: selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
+		// 	if (layerEdgeLists[i][n].size() > MM) {
+		// 		vector<pair<double, int>> distPairs;
+		// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+		// 		sort(distPairs.begin(), distPairs.end());
+		// 		layerEdgeLists[i][n].clear();
+		// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+		// 	}
+		// }
 		ep = selectedNeighbors[0];
 	}
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
