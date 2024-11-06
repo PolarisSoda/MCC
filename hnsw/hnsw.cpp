@@ -13,12 +13,11 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> candidates;
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> nearestNeighbors;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> candidates;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> nearestNeighbors;
 	unordered_set<int> isVisited;
 
 	double td = q.dist(items[ep]);
-
 	candidates.push(make_pair(td, ep));
 	nearestNeighbors.push(make_pair(td, ep));
 	isVisited.insert(ep);
@@ -32,8 +31,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if(ci.first > fi.first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
-		vector<int> cp_layerEdgeLists = layerEdgeLists[lc][nid];
-		int sz = cp_layerEdgeLists.size();
+		int sz = layerEdgeLists[lc][nid].size();
 
 		struct alignas(64) Aligned {
 			bool value = false;
@@ -84,10 +82,10 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
 
-			if ((td < fi.first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
-				candidates.push(make_pair(td, ed)); //cand에 집어넣고
-				nearestNeighbors.push(make_pair(td, ed)); //neares에도 집어넣고
-				if (nearestNeighbors.size() > ef) nearestNeighbors.pop(); //안 넘게 지워버린다.
+			if ((td < fi.first) || nearestNeighbors.size() < ef) {
+				candidates.push(make_pair(td, ed));
+				nearestNeighbors.push(make_pair(td, ed));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.pop();
 			}
 		}
 
