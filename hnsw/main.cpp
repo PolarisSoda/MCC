@@ -107,7 +107,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	double build_time = omp_get_wtime() - begin_build;
 	
 	cout << "Build Time: " << build_time << " sec" << endl << endl;
-	
+
 	// Query Phase
 	vector<double> hnsw_times(omp_get_max_threads(), 0.0);
 	vector<vector<int>> all_knns(numQueries);
@@ -190,7 +190,6 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 
 int main(int argc, char* argv[]) {
 	omp_set_nested(1);
-	omp_set_num_threads(4);
 	int opt;
 	int opt_cnt = 0;
 	int dimensions = 96;
