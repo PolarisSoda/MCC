@@ -58,10 +58,15 @@ vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
 
 void HNSWGraph::addEdge(int st, int ed, int lc) {
 	if (st == ed) return;
-	omp_set_lock(&layer_lock[lc]);
-	layerEdgeLists[lc][st].push_back(ed);
-	layerEdgeLists[lc][ed].push_back(st);
-	omp_unset_lock(&layer_lock[lc]);
+	if (omp_test_lock(&layer_lock[lc])) {
+        // 락을 설정할 수 있는 경우
+        layerEdgeLists[lc][st].push_back(ed);
+        layerEdgeLists[lc][ed].push_back(st);
+        omp_unset_lock(&layer_lock[lc]);
+    } else {
+        // 락을 설정할 수 없는 경우 다른 작업 수행
+        // 예: 대기하거나, 다른 작업을 수행하거나, 로그를 남기거나
+    }
 }
 
 void HNSWGraph::Insert(Item& q) {
