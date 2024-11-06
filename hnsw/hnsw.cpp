@@ -30,7 +30,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		if (ci->first > fi->first) break;
 
 		int sz = layerEdgeLists[lc][nid].size();
-		cout << sz << endl;
+
 		struct alignas(64) Aligned {
 			bool value = false;
 			double distance;
@@ -46,9 +46,9 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			#pragma omp critical (isVisited)
 			{	
 				visited = (isVisited.find(ed) != isVisited.end());
-				if(visited) isVisited.insert(ed);
+				if(!visited) isVisited.insert(ed);
 			}
-			if(!visited) continue;
+			if(visited) continue;
 
 			distances[j].distance = q.dist(items[ed]);
 			distances[j].id = ed;
