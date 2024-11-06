@@ -98,6 +98,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 	int tcnt = 0;
 	while(!nearestNeighbors.empty()) {
+		cout << nearestNeighbors.size() << "!!" << endl;
 		if(tcnt > ef) break; 
 		results.push_back(nearestNeighbors.top().second);
 		nearestNeighbors.pop();
