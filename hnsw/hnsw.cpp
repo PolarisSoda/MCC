@@ -26,15 +26,37 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
 		auto fi = nearestNeighbors.end(); fi--;
+
 		if (ci->first > fi->first) break;
-		for (int ed: layerEdgeLists[lc][nid]) {
-			if (isVisited.find(ed) != isVisited.end()) continue;
-			fi = nearestNeighbors.end(); fi--;
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
+
+		int sz = layerEdgeLists[lc][nid].size();
+
+		struct alignas(64) Aligned {
+			bool value = false;
+			double distance;
+			int id;
+			char padding[52];
+		};
+		vector<Aligned> distances(sz);
+
+		for(int j=0; j<sz; j++) {
+			int ed = layerEdgeLists[lc][nid][j];
+			bool visited;
+			if(isVisited.find(ed) != isVisited.end()) continue;
+
+			distances[j].distance = q.dist(items[ed]);
+			distances[j].id = ed;
+			distances[j].value = true;
+		}
+
+		for(auto tt : distances) {
+			if(tt.value == false) continue;
+			isVisited.insert(tt.id);
+			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
+				auto temp = make_pair(tt.distance,tt.id);
+				
+				candidates.insert(temp);
+				nearestNeighbors.insert(temp);
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
