@@ -53,12 +53,10 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			distances[j].distance = q.dist(items[ed]);
 			distances[j].id = ed;
 			distances[j].value = true;
-			cout << distances[j].distance << endl;
 		}
 		#pragma omp barrier
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
-			cout << "HELLO" << endl;
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				candidates.insert(make_pair(tt.distance, tt.id));
 				nearestNeighbors.insert(make_pair(tt.distance, tt.id));
