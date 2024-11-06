@@ -30,38 +30,50 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if (ci->first > fi->first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
-		#pragma omp parallel shared(candidates,nearestNeighbors,isVisited) firstprivate(fi)
-		{
-			vector<int> cp_layerEdgeLists = layerEdgeLists[lc][nid];
-			int sz = cp_layerEdgeLists.size();
+		vector<int> cp_layerEdgeLists = layerEdgeLists[lc][nid];
+		int sz = cp_layerEdgeLists.size();
 
-			#pragma omp for
-			for(int j=0; j<sz; j++) {
-				int ed = cp_layerEdgeLists[j];
-				int nsz = 0;
-				int fi_first = 0;
+		struct alignas(64) Aligned {
+			bool value = false;
+			double distance;
+			int id;
+			char padding[51];
+		};
+		vector<Aligned> check_edge(sz);
 
-				if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
-				
-				#pragma omp critical
-				{
-					fi = nearestNeighbors.end(); fi--;
-					nsz = nearestNeighbors.size();
-					fi_first = fi->first;
-				}
+		int fi_first = fi->first;
+		int nsz = nearestNeighbors.size();
+		int add_count = 0;
+
+		#pragma omp parallel for shared(check_edge) firstprivate(td) reduction(+:add_count)
+		for(int j=0; j<sz; j++) {
+			int ed = cp_layerEdgeLists[j];
+			td = q.dist(items[ed]);
+
+			#pragma omp critical (isVisited)
+			{
+				if (isVisited.find(ed) != isVisited.end()) continue;
 				isVisited.insert(ed);
-				td = q.dist(items[ed]);
+			}
 
-				if((td < fi_first) || nsz < ef) {
-					candidates.insert(make_pair(td,ed));
-					nearestNeighbors.insert(make_pair(td,ed));
-					if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
-				}
-				
+			if((td < fi_first) || nsz < ef) {
+				check_edge[j].value = true;
+				check_edge[j].distance = td;
+				check_edge[j].id = ed;
+				add_count++;
 			}
 		}
+
+		for(int j=0; j<sz; j++) {
+			if(check_edge[j].value == false) continue;
+			candidates.insert(make_pair(check_edge[j].distance, check_edge[j].id));
+			nearestNeighbors.insert(make_pair(check_edge[j].distance, check_edge[j].id));
+			if(nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+		}
 		
-		// for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다. 
+
+		// for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다.
+
 		// 	if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
 
 		// 	fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
