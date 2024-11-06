@@ -138,13 +138,11 @@ void HNSWGraph::Insert(Item& q) {
 		// for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
 
 		int sz = selectedNeighbors.size();
-		#pragma omp parallel for
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			addEdge(n,nid,i);
 		}
 		
-		#pragma omp parallel for 
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
