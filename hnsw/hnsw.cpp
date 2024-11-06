@@ -146,14 +146,14 @@ void HNSWGraph::Insert(Item& q) {
 		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
 		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
 		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
-
-		// for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
+		cout << selectedNeighbors.size() << "!!" << endl;
+		for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
 
 		int sz = selectedNeighbors.size();
-		for(int j=0; j<sz; j++) {
-			int n = selectedNeighbors[j];
-			addEdge(n,nid,i);
-		}
+		// for(int j=0; j<sz; j++) {
+		// 	int n = selectedNeighbors[j];
+		// 	addEdge(n,nid,i);
+		// }
 		
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
