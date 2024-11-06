@@ -102,7 +102,7 @@ void HNSWGraph::Insert(Item& q) {
 		// 	}
 		// }
 
-		int tn = max(sz,32);
+		int tn = max(sz,20);
 
 		#pragma omp parallel for num_threads(tn)
 		for(int j=0; j<sz; j++) {
