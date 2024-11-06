@@ -48,36 +48,49 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		int nsz = nearestNeighbors.size();
 		int add_count = 0;
 
-		#pragma omp parallel for shared(check_edge) firstprivate(td) reduction(+:add_count)
-		for(int j=0; j<sz; j++) {
-			int ed = cp_layerEdgeLists[j];
-			td = q.dist(items[ed]);
+		// #pragma omp parallel for shared(check_edge) firstprivate(td) reduction(+:add_count)
+		// for(int j=0; j<sz; j++) {
+		// 	int ed = cp_layerEdgeLists[j];
+		// 	td = q.dist(items[ed]);
 			
-			bool visited;
-			#pragma omp critical (isVisited)
-			{	
+		// 	bool visited;
+		// 	#pragma omp critical (isVisited)
+		// 	{	
 
-				if(!(visited = (isVisited.find(ed) != isVisited.end()))) {
-					isVisited.insert(ed);
-				}
-			}
-			if(visited) continue;
+		// 		if(!(visited = (isVisited.find(ed) != isVisited.end()))) {
+		// 			isVisited.insert(ed);
+		// 		}
+		// 	}
+		// 	if(visited) continue;
 
-			if((td < fi_first) || nsz < ef) {
-				check_edge[j].value = true;
-				check_edge[j].distance = td;
-				check_edge[j].id = ed;
-				add_count++;
-			}
-		}
+		// 	if((td < fi_first) || nsz < ef) {
+		// 		check_edge[j].value = true;
+		// 		check_edge[j].distance = td;
+		// 		check_edge[j].id = ed;
+		// 		add_count++;
+		// 	}
+		// }
 
-		for(int j=0; j<sz; j++) {
-			if(check_edge[j].value == false) continue;
-			candidates.push(make_pair(check_edge[j].distance, check_edge[j].id));
-			nearestNeighbors.push(make_pair(check_edge[j].distance, check_edge[j].id));
-			if(nearestNeighbors.size() > ef) nearestNeighbors.pop();
-		}
+		// for(int j=0; j<sz; j++) {
+		// 	if(check_edge[j].value == false) continue;
+		// 	candidates.push(make_pair(check_edge[j].distance, check_edge[j].id));
+		// 	nearestNeighbors.push(make_pair(check_edge[j].distance, check_edge[j].id));
+		// 	if(nearestNeighbors.size() > ef) nearestNeighbors.pop();
+		// }
 		
+		for(int ed: layerEdgeLists[lc][nid]) {
+			if (isVisited.find(ed) != isVisited.end()) continue;
+
+			fi = nearestNeighbors.top(); nearestNeighbors.pop();
+			isVisited.insert(ed);
+			td = q.dist(items[ed]);
+
+			if ((td < fi.first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
+				candidates.push(make_pair(td, ed)); //cand에 집어넣고
+				nearestNeighbors.push(make_pair(td, ed)); //neares에도 집어넣고
+				if (nearestNeighbors.size() > ef) nearestNeighbors.pop(); //안 넘게 지워버린다.
+			}
+		}
 
 		// for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다.
 
@@ -146,7 +159,7 @@ void HNSWGraph::Insert(Item& q) {
 		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
 		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
 		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
-		cout << selectedNeighbors.size() << "!!" << endl;
+
 		for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
 
 		int sz = selectedNeighbors.size();
