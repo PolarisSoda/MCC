@@ -51,13 +51,13 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		}
 
 		for(auto tt : distances) {
+			fi = nearestNeighbors.end(); fi--;
 			if(tt.value == false) continue;
 			isVisited.insert(tt.id);
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				auto temp = make_pair(tt.distance,tt.id);
 				
 				candidates.insert(temp);
-				cout << candidates.size() << endl;
 				nearestNeighbors.insert(temp);
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
