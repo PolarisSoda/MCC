@@ -30,7 +30,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		if (ci->first > fi->first) break;
 
 		int sz = layerEdgeLists[lc][nid].size();
-
+		cout << sz << endl;
 		struct alignas(64) Aligned {
 			bool value = false;
 			double distance;
