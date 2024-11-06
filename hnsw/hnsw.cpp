@@ -40,7 +40,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		};
 		vector<Aligned> distances(sz);
 
-		#pragma omp parallel shared(distances)
 		{
 			std::unordered_set<int> localVisited;
 
