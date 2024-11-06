@@ -29,7 +29,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		int nid = ci.second; //dist가 가장 작은 친구의 nid를 가져온다.
 
 		auto fi = nearestNeighbors.top();
-		nearestNeighbors.pop();
 
 		if(ci.first > fi.first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
@@ -81,7 +80,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		for(int ed: layerEdgeLists[lc][nid]) {
 			if (isVisited.find(ed) != isVisited.end()) continue;
 
-			fi = nearestNeighbors.top(); nearestNeighbors.pop();
+			fi = nearestNeighbors.top();
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
 
