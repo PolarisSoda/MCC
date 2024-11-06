@@ -111,19 +111,8 @@ void HNSWGraph::Insert(Item& q) {
 		// 	}
 		// }
 
-		//#pragma omp parallel for
-		for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
-			if (layerEdgeLists[i][n].size() > MM) {
-				vector<pair<double, int>> distPairs;
-				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-				sort(distPairs.begin(), distPairs.end());
-				layerEdgeLists[i][n].clear();
-				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-			}
-		}
-
-		// for(int j=0; j<sz; j++) { //연결한 Neighbor들을 전부 탐색하여
-		// 	int n = selectedNeighbors[j];
+		
+		// for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
 		// 	if (layerEdgeLists[i][n].size() > MM) {
 		// 		vector<pair<double, int>> distPairs;
 		// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
@@ -132,6 +121,17 @@ void HNSWGraph::Insert(Item& q) {
 		// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 		// 	}
 		// }
+		#pragma omp parallel for
+		for(int j=0; j<sz; j++) { //연결한 Neighbor들을 전부 탐색하여
+			int n = selectedNeighbors[j];
+			if (layerEdgeLists[i][n].size() > MM) {
+				vector<pair<double, int>> distPairs;
+				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+				sort(distPairs.begin(), distPairs.end());
+				layerEdgeLists[i][n].clear();
+				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+			}
+		}
 		ep = selectedNeighbors[0];
 	}
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
