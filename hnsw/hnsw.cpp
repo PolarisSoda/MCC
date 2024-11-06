@@ -54,12 +54,14 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			distances[j].distance = q.dist(items[ed]);
 			distances[j].id = ed;
 			distances[j].value = true;
+			cout << ed << endl;
 		}
 
 		for(auto tt : distances) {
 			if(tt.value == false) continue;
 			if ((tt.distance < fi->first) || nearestNeighbors.size() < ef) {
 				auto temp = make_pair(tt.distance,tt.id);
+				
 				candidates.insert(temp);
 				nearestNeighbors.insert(temp);
 				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
