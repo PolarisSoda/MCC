@@ -95,7 +95,15 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		// }
 	}
 	vector<int> results;
-	for(auto &p: nearestNeighbors) results.push_back(p.second); //결론적으로 q와 가장 가까운 순서대로 neighbor들의 nid를 가져오게 된다.
+
+	int tcnt = 0;
+	while(!nearestNeighbors.empty()) {
+		if(tcnt > ef) break; 
+		results.push_back(nearestNeighbors.top().second);
+		nearestNeighbors.pop();
+		tcnt++;
+	}
+	//for(auto &p: nearestNeighbors) results.push_back(p.second); //결론적으로 q와 가장 가까운 순서대로 neighbor들의 nid를 가져오게 된다.
 	return results;
 }
 
