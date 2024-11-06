@@ -53,6 +53,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			distances[j].distance = q.dist(items[ed]);
 			distances[j].id = ed;
 			distances[j].value = true;
+			cout << distances[j].distance << endl;
 		}
 		#pragma omp barrier
 		for(auto tt : distances) {
