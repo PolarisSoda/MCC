@@ -65,6 +65,8 @@ struct HNSWGraph {
 
 	vector<omp_lock_t> layer_lock;
 
+	vector<int> heights;
+	
 	// number of items
 	atomic<int> itemNum = 0;
 	// actual vector of the items

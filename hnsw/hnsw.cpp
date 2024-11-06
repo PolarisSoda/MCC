@@ -30,19 +30,50 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if (ci->first > fi->first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
 
-		for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다. 
-			if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
+		#pragma omp parallel shared(candidates,nearestNeighbors,isVisited) firstprivate(fi)
+		{
+			vector<int> cp_layerEdgeLists = layerEdgeLists[lc][nid];
+			int sz = cp_layerEdgeLists.size();
 
-			fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
-			isVisited.insert(ed); //visited 체크.
-			td = q.dist(items[ed]); //td를 더 짧은 거리로 업데이트 한다.
+			#pragma omp for
+			for(int j=0; j<sz; j++) {
+				int ed = cp_layerEdgeLists[j];
+				int nsz = 0;
+				int fi_first = 0;
 
-			if ((td < fi->first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
-				candidates.insert(make_pair(td, ed)); //cand에 집어넣고
-				nearestNeighbors.insert(make_pair(td, ed)); //neares에도 집어넣고
-				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
+				if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
+				
+				#pragma omp critical
+				{
+					fi = nearestNeighbors.end(); fi--;
+					nsz = nearestNeighbors.size();
+					fi_first = fi->first;
+				}
+				isVisited.insert(ed);
+				td = q.dist(items[ed]);
+
+				if((td < fi_first) || nsz < ef) {
+					candidates.insert(make_pair(td,ed));
+					nearestNeighbors.insert(make_pair(td,ed));
+					if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
+				}
+				
 			}
 		}
+		
+		// for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다. 
+		// 	if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
+
+		// 	fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
+		// 	isVisited.insert(ed); //visited 체크.
+		// 	td = q.dist(items[ed]); //td를 더 짧은 거리로 업데이트 한다.
+
+		// 	if ((td < fi->first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
+		// 		candidates.insert(make_pair(td, ed)); //cand에 집어넣고
+		// 		nearestNeighbors.insert(make_pair(td, ed)); //neares에도 집어넣고
+		// 		if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
+		// 	}
+		// }
 	}
 	vector<int> results;
 	for(auto &p: nearestNeighbors) results.push_back(p.second); //결론적으로 q와 가장 가까운 순서대로 neighbor들의 nid를 가져오게 된다.
@@ -78,6 +109,7 @@ void HNSWGraph::Insert(Item& q) {
 		enterNode = nid;
 		return;
 	}
+
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
