@@ -13,107 +13,32 @@
 using namespace std;
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_greater> candidates;
-	priority_queue<pair<double,int>,vector<pair<double,int>>,compare_less> nearestNeighbors;
+	set<pair<double, int>> candidates;
+	set<pair<double, int>> nearestNeighbors;
 	unordered_set<int> isVisited;
-
 	double td = q.dist(items[ep]);
-	candidates.push(make_pair(td, ep));
-	nearestNeighbors.push(make_pair(td, ep));
+	candidates.insert(make_pair(td, ep));
+	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
-
 	while (!candidates.empty()) {
-		auto ci = candidates.top();
-		candidates.pop();
-		int nid = ci.second; //dist가 가장 작은 친구의 nid를 가져온다.
-
-		auto fi = nearestNeighbors.top();
-
-		if(ci.first > fi.first) break; //만약 candidate의 min dist가 nearestNeighbor의 max dist보다 크면 접는다.
-
-		int sz = layerEdgeLists[lc][nid].size();
-
-		struct alignas(64) Aligned {
-			bool value = false;
-			double distance;
-			int id;
-			char padding[51];
-		};
-		vector<Aligned> check_edge(sz);
-
-		int fi_first = fi.first;
-		int nsz = nearestNeighbors.size();
-		int add_count = 0;
-
-		// #pragma omp parallel for shared(check_edge) firstprivate(td) reduction(+:add_count)
-		// for(int j=0; j<sz; j++) {
-		// 	int ed = cp_layerEdgeLists[j];
-		// 	td = q.dist(items[ed]);
-			
-		// 	bool visited;
-		// 	#pragma omp critical (isVisited)
-		// 	{	
-
-		// 		if(!(visited = (isVisited.find(ed) != isVisited.end()))) {
-		// 			isVisited.insert(ed);
-		// 		}
-		// 	}
-		// 	if(visited) continue;
-
-		// 	if((td < fi_first) || nsz < ef) {
-		// 		check_edge[j].value = true;
-		// 		check_edge[j].distance = td;
-		// 		check_edge[j].id = ed;
-		// 		add_count++;
-		// 	}
-		// }
-
-		// for(int j=0; j<sz; j++) {
-		// 	if(check_edge[j].value == false) continue;
-		// 	candidates.push(make_pair(check_edge[j].distance, check_edge[j].id));
-		// 	nearestNeighbors.push(make_pair(check_edge[j].distance, check_edge[j].id));
-		// 	if(nearestNeighbors.size() > ef) nearestNeighbors.pop();
-		// }
-		
-		for(int ed: layerEdgeLists[lc][nid]) {
+		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		int nid = ci->second;
+		auto fi = nearestNeighbors.end(); fi--;
+		if (ci->first > fi->first) break;
+		for (int ed: layerEdgeLists[lc][nid]) {
 			if (isVisited.find(ed) != isVisited.end()) continue;
-
-			fi = nearestNeighbors.top();
+			fi = nearestNeighbors.end(); fi--;
 			isVisited.insert(ed);
 			td = q.dist(items[ed]);
-
-			if ((td < fi.first) || nearestNeighbors.size() < ef) {
-				candidates.push(make_pair(td, ed));
-				nearestNeighbors.push(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.pop();
+			if ((td < fi->first) || nearestNeighbors.size() < ef) {
+				candidates.insert(make_pair(td, ed));
+				nearestNeighbors.insert(make_pair(td, ed));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
 			}
 		}
-
-		// for (int ed: layerEdgeLists[lc][nid]) { //현재 lc레이어의 nid의 Edge들을 탐색한다.
-
-		// 	if (isVisited.find(ed) != isVisited.end()) continue; //만약 방문했으면 걍 continue.
-
-		// 	fi = nearestNeighbors.end(); fi--; //nearestNeighbor의 dist가 가장큰 친구의 iterator를 가져온다.
-		// 	isVisited.insert(ed); //visited 체크.
-		// 	td = q.dist(items[ed]); //td를 더 짧은 거리로 업데이트 한다.
-
-		// 	if ((td < fi->first) || nearestNeighbors.size() < ef) { //만약 nearestNeighbor에 들어갈 조건이 되고. ef보다 사이즈가 작다면?
-		// 		candidates.insert(make_pair(td, ed)); //cand에 집어넣고
-		// 		nearestNeighbors.insert(make_pair(td, ed)); //neares에도 집어넣고
-		// 		if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi); //안 넘게 지워버린다.
-		// 	}
-		// }
 	}
 	vector<int> results;
-
-	int tcnt = 0;
-	while(!nearestNeighbors.empty()) {
-		if(tcnt > ef) break; 
-		results.push_back(nearestNeighbors.top().second);
-		nearestNeighbors.pop();
-		tcnt++;
-	}
-	//for(auto &p: nearestNeighbors) results.push_back(p.second); //결론적으로 q와 가장 가까운 순서대로 neighbor들의 nid를 가져오게 된다.
+	for(auto &p: nearestNeighbors) results.push_back(p.second);
 	return results;
 }
 
