@@ -46,7 +46,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			#pragma omp critical (isVisited)
 			{	
 				visited = (isVisited.find(ed) != isVisited.end());
-				if(!visited) isVisited.insert(ed);
+				isVisited.insert(ed);
 			}
 			if(visited) continue;
 
