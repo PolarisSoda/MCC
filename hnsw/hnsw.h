@@ -27,16 +27,7 @@ struct Item {
 		double result = 0.0;
 		int sz = (int)values.size();
 
-		// Ensure both items have the same dimension
-		if (sz != other.values.size()) {
-			#pragma omp critical(printer)
-			{
-				cerr << "Dimension mismatch: " << sz << " vs " << other.values.size() << endl;
-			}
-			
-			exit(1); // or handle the error appropriately
-		}
-
+		#pragma omp parallel for reduction(+ : result)
 		for (int i = 0; i < sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
