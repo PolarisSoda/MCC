@@ -131,11 +131,6 @@ void HNSWGraph::Insert(Item& q) {
 			if (layerEdgeLists[i][n].size() > MM) {
 				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
 				continue;
-				vector<pair<double, int>> distPairs;
-				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-				sort(distPairs.begin(), distPairs.end());
-				layerEdgeLists[i][n].clear();
-				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
 		}
 
