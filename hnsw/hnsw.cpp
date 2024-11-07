@@ -13,8 +13,8 @@
 
 using namespace std;
 
-void HNSWGraph::SearchTemp(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) 
-	{
+void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
+	using_thread++;
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
 		int nid = ci->second;
@@ -35,30 +35,27 @@ void HNSWGraph::SearchTemp(int thread_id,vector<set<pair<double,int>>>& local_ca
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
 
-			
 			if ((td < fi->first) || local_nearestNeighbors[thread_id].size() < ef) {
-				int param = rand()%2;
-				if(param) {
+				if(using_thread >= 40) {
 					local_candidates[thread_id].insert(make_pair(td, ed));
 					local_nearestNeighbors[thread_id].insert(make_pair(td, ed));
 					if (local_nearestNeighbors[thread_id].size() > ef) local_nearestNeighbors[thread_id].erase(fi);
 				} else {
-					#pragma omp task firstprivate(td,ed,lc)
+					#pragma omp task firstprivate(td,ed)
 					{
 						int new_thread_id = omp_get_thread_num();
-						local_candidates[thread_id].insert(make_pair(td,ed));
-						local_nearestNeighbors[thread_id].insert(make_pair(td,ed));
-						SearchTemp(new_thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,ef,q);
+						local_candidates[new_thread_id].insert(make_pair(td,ed));
+						local_nearestNeighbors[new_thread_id].insert(make_pair(td,ed));
+						SearchWorker(new_thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,ef,q);
 					}
 				}
-				
 			}
 		}
 	}
 }
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	double td = q.dist(items[ep]);
+	//this is master thread, right?
 
 	unordered_set<int> isVisited;
 	isVisited.insert(ep);
@@ -66,81 +63,45 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	omp_init_lock(&lock_isVisited);
 
 	int thread_cnt = omp_get_num_threads();
-	int local_ef = ef / thread_cnt + 10;
+	int local_ef = ef / thread_cnt + 3;
 
 	vector<set<pair<double,int>>> local_candidates(thread_cnt);
-	vector<set<pair<double,int>>> local_nearestNeightbors(thread_cnt);
-
-	local_candidates[0].insert(make_pair(td,ep));
-	local_nearestNeightbors[0].insert(make_pair(td,ep));
+	vector<set<pair<double,int>>> local_nearestNeighbors(thread_cnt);
 	
 	#pragma omp parallel num_threads(thread_cnt)
 	{
-		#pragma omp master
+		#pragma omp single nowait 
 		{	
-			while(!local_candidates[0].empty()) {
-				auto ci = local_candidates[0].begin();
-				local_candidates[0].erase(local_candidates[0].begin());
-				int nid = ci->second;
+			using_thread++;
+			int thread_id = omp_get_thread_num();
+			double td = q.dist(items[ep]);
 
-				auto fi = local_nearestNeightbors[0].end(); fi--;
-
-				if(ci->first > fi->first) break;
-
-				for(int ed : layerEdgeLists[lc][nid]) {
-					omp_set_lock(&lock_isVisited);
-					if (isVisited.find(ed) != isVisited.end()) {
-						omp_unset_lock(&lock_isVisited);
-						continue;
-					} else {
-						isVisited.insert(ed);
-						omp_unset_lock(&lock_isVisited);
-					}
-
-					fi = local_nearestNeightbors[0].end(); fi--;
-					double new_td = q.dist(items[ed]);
-
-					bool first = true;
-					if ((td < fi->first) || local_nearestNeightbors[0].size() < local_ef) {
-						if(first) {
-							local_candidates[0].insert(make_pair(new_td,ed));
-							local_nearestNeightbors[0].insert(make_pair(new_td,ed));
-							if (local_nearestNeightbors[0].size() > local_ef) local_nearestNeightbors[0].erase(fi);
-						} else {
-							#pragma omp task firstprivate(new_td,ed,lc)
-							{
-								int thread_id = omp_get_thread_num();
-								local_candidates[thread_id].insert(make_pair(new_td,ed));
-								local_nearestNeightbors[thread_id].insert(make_pair(new_td,ed));
-								SearchTemp(thread_id,local_candidates,local_nearestNeightbors,isVisited,lock_isVisited,lc,local_ef,q);
-							}
-						}
-					}
-				}
-			}
+			local_candidates[thread_id].insert(make_pair(td,ep));
+			local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
+			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
+			using_thread--;
 		}
 	}
 
-	struct comapre {
+	struct compare {
 		bool operator() (pair<double,int> a, pair<double,int> b) {
 			return a.first > b.first;
 		}
 	};
 
-	priority_queue<pair<double,int>,vector<pair<double,int>>,comapre> pq;
+	priority_queue<pair<double,int>,vector<pair<double,int>>,compare> pq;
 
-	for (const auto& s : local_nearestNeightbors) {
-        for (const auto& element : s) {
-            if (pq.size() < ef) {
-                // Add to heap if we have fewer than K elements
+	for(const auto& s : local_nearestNeighbors) {
+        for(const auto& element : s) {
+            if(pq.size() < ef) {
                 pq.push(element);
-            } else if (element.first > pq.top().first) {
-                // If the new element is larger, pop the smallest and add the new element
+            } else if(element.first > pq.top().first) {
                 pq.pop();
                 pq.push(element);
             } else break;
         }
     }
+
 	vector<int> results;
 	while(!pq.empty()) results.push_back(pq.top().second), pq.pop();
 	return results;
@@ -181,82 +142,77 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0]; //query가 얼마 안걸렸던 것처럼 이것도 사실 별로 안걸린다. 아마도.
 
 	int tn = omp_get_num_threads();
-	#pragma omp parallel num_threads(tn)
-	{
-		#pragma omp single
-		{
-			for (int i = min(l, maxLyer); i >= 0; i--) {
-				int MM = l == 0 ? MMax0 : MMax;
-				vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
-				vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
+	// #pragma omp parallel num_threads(tn)
+	// {
+	// 	#pragma omp single
+	// 	{
+	// 		for (int i = min(l, maxLyer); i >= 0; i--) {
+	// 			int MM = l == 0 ? MMax0 : MMax;
+	// 			vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
+	// 			vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
 
-				for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
+	// 			for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
 
-				int sz = selectedNeighbors.size();
+	// 			int sz = selectedNeighbors.size();
 
-				for(int j=0; j<sz; j++) {
-					#pragma omp task firstprivate(i, j, sz, selectedNeighbors, MM)
-					{
-						int n = selectedNeighbors[j];
-						if (layerEdgeLists[i][n].size() > MM) {
-							int resize_random = rand()%2;
-							if(resize_random) {
-								layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-							} else {
-								vector<pair<double, int>> distPairs;
-								for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-								sort(distPairs.begin(), distPairs.end());
-								layerEdgeLists[i][n].clear();
-								for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-							}
-						}
-					}
-				}
-				ep = selectedNeighbors[0];
-			}
-		}
-	}
-	
-	// for (int i = min(l, maxLyer); i >= 0; i--) {
-	// 	int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
-	// 	vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
-	// 	vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
-
-	// 	for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
-
-	// 	int sz = selectedNeighbors.size();
-	// 	// for(int j=0; j<sz; j++) {
-	// 	// 	int n = selectedNeighbors[j];
-	// 	// 	addEdge(n,nid,i);
-	// 	// }
-
-	// 	int tn = min(sz,omp_get_num_threads());
-
-	// 	#pragma omp parallel for num_threads(tn)
-	// 	for(int j=0; j<sz; j++) {
-	// 		int n = selectedNeighbors[j];
-	// 		if (layerEdgeLists[i][n].size() > MM) {
-	// 			layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
-	// 			continue;
-	// 			vector<pair<double, int>> distPairs;
-	// 			for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-	// 			sort(distPairs.begin(), distPairs.end());
-	// 			layerEdgeLists[i][n].clear();
-	// 			for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+	// 			for(int j=0; j<sz; j++) {
+	// 				#pragma omp task firstprivate(i, j, sz, selectedNeighbors, MM)
+	// 				{
+	// 					int n = selectedNeighbors[j];
+	// 					if (layerEdgeLists[i][n].size() > MM) {
+	// 						int resize_random = rand()%2;
+	// 						if(resize_random) {
+	// 							layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
+	// 						} else {
+	// 							vector<pair<double, int>> distPairs;
+	// 							for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+	// 							sort(distPairs.begin(), distPairs.end());
+	// 							layerEdgeLists[i][n].clear();
+	// 							for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+	// 						}
+	// 					}
+	// 				}
+	// 			}
+	// 			ep = selectedNeighbors[0];
 	// 		}
 	// 	}
+	// }
+	
+	for (int i = min(l, maxLyer); i >= 0; i--) {
+		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
+		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
+		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
+
+		for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
+
+		int sz = selectedNeighbors.size();
+		int tn = min(sz,omp_get_num_threads());
+
+		#pragma omp parallel for num_threads(tn)
+		for(int j=0; j<sz; j++) {
+			int n = selectedNeighbors[j];
+			if (layerEdgeLists[i][n].size() > MM) {
+				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
+				continue;
+				vector<pair<double, int>> distPairs;
+				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+				sort(distPairs.begin(), distPairs.end());
+				layerEdgeLists[i][n].clear();
+				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+			}
+		}
 
 		
-	// 	// for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
-	// 	// 	if (layerEdgeLists[i][n].size() > MM) {
-	// 	// 		vector<pair<double, int>> distPairs;
-	// 	// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-	// 	// 		sort(distPairs.begin(), distPairs.end());
-	// 	// 		layerEdgeLists[i][n].clear();
-	// 	// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-	// 	// 	}
-	// 	// }
-	// 	ep = selectedNeighbors[0];
-	// }
+		// for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
+		// 	if (layerEdgeLists[i][n].size() > MM) {
+		// 		vector<pair<double, int>> distPairs;
+		// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+		// 		sort(distPairs.begin(), distPairs.end());
+		// 		layerEdgeLists[i][n].clear();
+		// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+		// 	}
+		// }
+		ep = selectedNeighbors[0];
+	}
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
