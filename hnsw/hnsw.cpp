@@ -22,8 +22,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
-	set<pair<double, int>> new_candidates;
-	set<pair<double, int>> nearestNeighbors;
 
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
