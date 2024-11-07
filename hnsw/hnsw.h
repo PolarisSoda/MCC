@@ -7,6 +7,7 @@
 #include <atomic>
 #include <omp.h>
 #include <set>
+#include <unordered_set>
 using namespace std;
 
 struct Item {
