@@ -22,6 +22,18 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
+	set<pair<double, int>> new_candidates;
+	set<pair<double, int>> nearestNeighbors;
+	#pragma omp parallel
+	{
+		#pragma omp single 
+		{
+			while(!candidates.empty()) {
+
+			}
+		}
+	}
+
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
@@ -76,7 +88,7 @@ void HNSWGraph::Insert(Item& q) {
 
 	// search up layer entrance
 	int ep = enterNode;
-	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
+	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0]; //query가 얼마 안걸렸던 것처럼 이것도 사실 별로 안걸린다. 아마도.
 
 	int tn = omp_get_num_threads();
 	#pragma omp parallel num_threads(tn)
@@ -85,7 +97,7 @@ void HNSWGraph::Insert(Item& q) {
 		{
 			for (int i = min(l, maxLyer); i >= 0; i--) {
 				int MM = l == 0 ? MMax0 : MMax;
-				vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
+				vector<int> neighbors = searchLayer(q, ep, 1, i); //neightbor의 목록을 찾고.
 				vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
 
 				for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
