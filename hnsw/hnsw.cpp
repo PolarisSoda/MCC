@@ -24,12 +24,18 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 
 		for (int ed: layerEdgeLists[lc][nid]) {
 			#pragma omp atomic
-			lock_isVisited = true;
+			{
+				lock_isVisited = true;
+			}
+			
 
 			isVisited.insert(ed);
 
 			#pragma omp atomic
-			lock_isVisited = false;
+			{
+				lock_isVisited = false;
+			}
+			
 			
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
