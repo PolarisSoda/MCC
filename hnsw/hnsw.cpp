@@ -78,7 +78,8 @@ void HNSWGraph::Insert(Item& q) {
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0];
 
-	#pragma omp parallel
+	int tn = omp_get_num_threads();
+	#pragma omp parallel num_threads(tn)
 	{
 		#pragma omp single
 		{
