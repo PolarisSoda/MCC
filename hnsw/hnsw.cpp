@@ -123,7 +123,7 @@ void HNSWGraph::Insert(Item& q) {
 		// 	addEdge(n,nid,i);
 		// }
 
-		int tn = max(sz,30);
+		int tn = min(sz,omp_get_num_threads());
 
 		#pragma omp parallel for num_threads(tn)
 		for(int j=0; j<sz; j++) {
