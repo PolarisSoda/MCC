@@ -123,13 +123,19 @@ void HNSWGraph::Insert(Item& q) {
 		// 	addEdge(n,nid,i);
 		// }
 
-		int tn = max(sz,omp_get_num_threads());
+		int tn = max(sz,30);
 
 		#pragma omp parallel for num_threads(tn)
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
 				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
+				continue;
+				vector<pair<double, int>> distPairs;
+				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+				sort(distPairs.begin(), distPairs.end());
+				layerEdgeLists[i][n].clear();
+				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
 			}
 		}
 
