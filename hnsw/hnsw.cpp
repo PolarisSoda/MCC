@@ -58,9 +58,6 @@ void HNSWGraph::SearchTemp(int thread_id,vector<set<pair<double,int>>>& local_ca
 }
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	set<pair<double, int>> candidates;
-	set<pair<double, int>> nearestNeighbors; //These values will be global.
-
 	double td = q.dist(items[ep]);
 
 	unordered_set<int> isVisited;
@@ -108,7 +105,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 						if(first) {
 							local_candidates[0].insert(make_pair(new_td,ed));
 							local_nearestNeightbors[0].insert(make_pair(new_td,ed));
-							if (nearestNeighbors.size() > local_ef) nearestNeighbors.erase(fi);
+							if (local_nearestNeightbors[0].size() > local_ef) local_nearestNeightbors[0].erase(fi);
 						} else {
 							#pragma omp task firstprivate(new_td,ed,lc)
 							{
@@ -124,25 +121,28 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		}
 	}
 
-	while (!candidates.empty()) {
-		auto ci = candidates.begin(); candidates.erase(candidates.begin());
-		int nid = ci->second;
-		auto fi = nearestNeighbors.end(); fi--;
-		if (ci->first > fi->first) break;
-		for (int ed: layerEdgeLists[lc][nid]) {
-			if (isVisited.find(ed) != isVisited.end()) continue;
-			fi = nearestNeighbors.end(); fi--;
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
-			}
+	struct comapre {
+		bool operator() (pair<double,int> a, pair<double,int> b) {
+			return a.first > b.first;
 		}
-	}
+	};
+
+	priority_queue<pair<double,int>,vector<pair<double,int>>,comapre> pq;
+
+	for (const auto& s : local_nearestNeightbors) {
+        for (const auto& element : s) {
+            if (pq.size() < ef) {
+                // Add to heap if we have fewer than K elements
+                pq.push(element);
+            } else if (element.first > pq.top().first) {
+                // If the new element is larger, pop the smallest and add the new element
+                pq.pop();
+                pq.push(element);
+            } else break;
+        }
+    }
 	vector<int> results;
-	for(auto &p: nearestNeighbors) results.push_back(p.second);
+	while(!pq.empty()) results.push_back(pq.top().second), pq.pop();
 	return results;
 }
 
