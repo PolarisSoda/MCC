@@ -92,7 +92,7 @@ void HNSWGraph::Insert(Item& q) {
 				int sz = selectedNeighbors.size();
 
 				for(int j=0; j<sz; j++) {
-					#pragma omp task firstprivate(i,j,selectedNeighbors) nowait
+					#pragma omp task firstprivate(i,j)
 					{
 						int n = selectedNeighbors[j];
 						if (layerEdgeLists[i][n].size() > MM) {
@@ -105,7 +105,7 @@ void HNSWGraph::Insert(Item& q) {
 					}
 				}
 				#pragma omp taskwait
-				
+
 				ep = selectedNeighbors[0];
 			}
 		}
