@@ -189,7 +189,6 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 }
 
 int main(int argc, char* argv[]) {
-	omp_set_nested(1);
 	int opt;
 	int opt_cnt = 0;
 	int dimensions = 96;
