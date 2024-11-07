@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,bool &lock_isVisited,int lc,int ef, Item& q) {
+void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,int &lock_isVisited,int lc,int ef, Item& q) {
 	using_thread++;
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
@@ -24,18 +24,12 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 
 		for (int ed: layerEdgeLists[lc][nid]) {
 			#pragma omp atomic
-			{
-				lock_isVisited = true;
-			}
-			
+			lock_isVisited = 1;
 
 			isVisited.insert(ed);
 
 			#pragma omp atomic
-			{
-				lock_isVisited = false;
-			}
-			
+			lock_isVisited = 0;
 			
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
@@ -64,7 +58,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 	unordered_set<int> isVisited;
 	isVisited.insert(ep);
-	bool using_isVisited = false;
+	int using_isVisited = false;
 
 	int thread_cnt = omp_get_num_threads();
 	int local_ef = ef / thread_cnt + 4;
