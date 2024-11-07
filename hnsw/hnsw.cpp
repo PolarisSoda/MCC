@@ -22,6 +22,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
+
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
@@ -47,7 +48,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
 	int maxLyer = layerEdgeLists.size() - 1;
 	int ep = enterNode;
-	for (int l = maxLyer; l >= 1; l--) ep = searchLayer(q, ep, 1, l)[0];
+	for (int l = maxLyer; l >= 1; l--) ep = searchLayer(q, ep, ef, l)[0];
 	return searchLayer(q, ep, K, 0);
 }
 
