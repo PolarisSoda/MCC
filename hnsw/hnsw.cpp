@@ -125,10 +125,12 @@ void HNSWGraph::Insert(Item& q) {
 
 		int tn = max(sz,omp_get_num_threads());
 
-		#pragma omp parallel for num_threads(tn)
+		#pragma omp parallel for num_threads(tn) nowait
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
+				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
+				continue;
 				vector<pair<double, int>> distPairs;
 				for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
 				sort(distPairs.begin(), distPairs.end());
