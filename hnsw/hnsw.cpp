@@ -22,6 +22,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
+	set<pair<double, int>> new_candidates;
+	set<pair<double, int>> nearestNeighbors;
 
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
@@ -48,7 +50,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
 	int maxLyer = layerEdgeLists.size() - 1;
 	int ep = enterNode;
-	for (int l = maxLyer; l >= 1; l--) ep = searchLayer(q, ep, ef, l)[0];
+	for (int l = maxLyer; l >= 1; l--) ep = searchLayer(q, ep, 1, l)[0];
 	return searchLayer(q, ep, K, 0);
 }
 
@@ -86,7 +88,7 @@ void HNSWGraph::Insert(Item& q) {
 		{
 			for (int i = min(l, maxLyer); i >= 0; i--) {
 				int MM = l == 0 ? MMax0 : MMax;
-				vector<int> neighbors = searchLayer(q, ep, 1, i); //neightbor의 목록을 찾고.
+				vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
 				vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
 
 				for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
