@@ -130,7 +130,6 @@ void HNSWGraph::Insert(Item& q) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
 				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
-				continue;
 			}
 		}
 
