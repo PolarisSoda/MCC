@@ -1,3 +1,4 @@
 .vscode
 hnsw/run.sh
 hnsw/Makefile
+hnsw/hnsw
