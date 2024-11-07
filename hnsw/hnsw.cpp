@@ -91,21 +91,21 @@ void HNSWGraph::Insert(Item& q) {
 
 				int sz = selectedNeighbors.size();
 
-				for(int j=0; j<sz; j++) {
-					#pragma omp task firstprivate(i,j)
-					{
-						int n = selectedNeighbors[j];
-						if (layerEdgeLists[i][n].size() > MM) {
-							vector<pair<double, int>> distPairs;
-							for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-							sort(distPairs.begin(), distPairs.end());
-							layerEdgeLists[i][n].clear();
-							for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+				#pragma omp task
+				{
+					for(int j=0; j<sz; j++) {
+						{
+							int n = selectedNeighbors[j];
+							if (layerEdgeLists[i][n].size() > MM) {
+								vector<pair<double, int>> distPairs;
+								for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+								sort(distPairs.begin(), distPairs.end());
+								layerEdgeLists[i][n].clear();
+								for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+							}
 						}
 					}
 				}
-				#pragma omp taskwait
-
 				ep = selectedNeighbors[0];
 			}
 		}
