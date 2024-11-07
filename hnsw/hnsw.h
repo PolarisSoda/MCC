@@ -6,7 +6,7 @@
 #include <iostream>
 #include <atomic>
 #include <omp.h>
-
+#include <set>
 using namespace std;
 
 struct Item {
