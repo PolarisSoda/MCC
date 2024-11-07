@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,atomic_flag &lock_isVisited,int lc,int ef, Item& q) {
+void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,bool &lock_isVisited,int lc,int ef, Item& q) {
 	using_thread++;
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
@@ -23,15 +23,13 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 		if (ci->first > fi->first) break;
 
 		for (int ed: layerEdgeLists[lc][nid]) {
-			int attempt_count = 5;
-			while(attempt_count) {
-				if(!lock_isVisited.test_and_set(std::memory_order_acquire)) {
-					isVisited.insert(ed);
-					lock_isVisited.clear(std::memory_order_release);
-					break;
-				}
-				attempt_count--;
-			}
+			#pragma omp atomic
+			lock_isVisited = true;
+
+			isVisited.insert(ed);
+
+			#pragma omp atomic
+			lock_isVisited = false;
 			
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
@@ -60,7 +58,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 	unordered_set<int> isVisited;
 	isVisited.insert(ep);
-	std::atomic_flag setLock = ATOMIC_FLAG_INIT;
+	bool using_isVisited = false;
 
 	int thread_cnt = omp_get_num_threads();
 	int local_ef = ef / thread_cnt + 4;
@@ -78,7 +76,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 			local_candidates[thread_id].insert(make_pair(td,ep));
 			local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
-			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,setLock,lc,local_ef,q);
+			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,using_isVisited,lc,local_ef,q);
 			using_thread--;
 		}
 	}
