@@ -79,7 +79,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 	myHNSWGraph.layerEdgeLists.clear();
 
-	#pragma omp parallel num_threads(numThreads)
+	#pragma omp parallel num_threads(2)
 	{
 		#pragma omp single
 		{
@@ -93,6 +93,8 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 			}
 		}
 	}
+	cout << endl;
+	
 	vector<int> cnt_element;
 	cnt_element.push_back(0);
 	for(int i=0; i<numThreads; i++) cnt_element.push_back(local_hnsw[i].layerEdgeLists[0].size() + cnt_element[i]);
@@ -102,7 +104,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 		cout << "Merged " << i << endl;
 	}
 
-	cout << endl;
+	
 
 	cout << "END BUILDING INDEX" << endl << endl;
 	double build_time = omp_get_wtime() - begin_build;
