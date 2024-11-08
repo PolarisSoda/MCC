@@ -94,11 +94,11 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		alignas(64) vector<unordered_set<int>> local_visit(40);
 
 
-		#pragma omp parallel firstprivate(fi_dist,cp_layer) num_threads(4)
+		#pragma omp parallel firstprivate(fi_dist,lc,nid) num_threads(4)
 		{
 			#pragma omp for
 			for(int j=0; j<layersize; j++) {
-				int ed = cp_layer[j];
+				int ed = layerEdgeLists[lc][nid][j];
 				int id = omp_get_thread_num();
 
 				if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) continue;
@@ -128,7 +128,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			{
 				for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
 				auto temp_fi = nearestNeighbors.end(); temp_fi--;
-				while(nearestNeighbors.size() > ef) temp_fi = nearestNeightbors.erase(temp_fi);
+				while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
 			}
 		}
 
