@@ -27,7 +27,7 @@ struct Item {
 	double dist(Item& other) {
 		double result = 0.0;
 		int sz = (int)values.size();
-		
+
 		for (int i = 0; i < sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
@@ -41,6 +41,11 @@ struct HNSWGraph {
 		layerEdgeLists.push_back(unordered_map<int, vector<int>>());
 	}
 	
+	HNSWGraph(const HNSWGraph& other)
+        : M(other.M), MMax(other.MMax), MMax0(other.MMax0), efConstruction(other.efConstruction), ml(other.ml) {
+		layerEdgeLists.push_back(unordered_map<int, vector<int>>());
+	}
+
 	// Number of neighbors
 	int M;
 	// Max number of neighbors in layers >= 1
