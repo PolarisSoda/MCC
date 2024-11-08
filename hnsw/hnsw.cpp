@@ -197,8 +197,8 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 	layerEdgeLists[lc][ed].push_back(st);
 }
 
-void HNSWGraph::Insert(Item& q) {
-	int nid = items.size();
+void HNSWGraph::Insert(Item& q,int thread_id) {
+	int nid = items.size() + thread_id * 10000;
 	itemNum++; items.push_back(q);
 
 	// sample layer
@@ -217,92 +217,6 @@ void HNSWGraph::Insert(Item& q) {
 	// search up layer entrance
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0]; //query가 얼마 안걸렸던 것처럼 이것도 사실 별로 안걸린다. 아마도.
-
-	// #pragma omp parallel num_threads(40)
-	// {
-	// 	#pragma omp single
-	// 	{
-	// 		for (int i = min(l, maxLyer); i >= 0; i--) {
-	// 			int MM = l == 0 ? MMax0 : MMax;
-	// 			vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
-	// 			vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
-
-	// 			for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
-
-	// 			int sz = selectedNeighbors.size();
-
-	// 			for(int j=0; j<sz; j++) {
-	// 				#pragma omp task firstprivate(i, j, sz, selectedNeighbors, MM)
-	// 				{
-	// 					int n = selectedNeighbors[j];
-	// 					if (layerEdgeLists[i][n].size() > MM) {
-	// 						int resize_random = rand()%2;
-	// 						if(resize_random) {
-	// 							layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-	// 						} else {
-	// 							vector<pair<double, int>> distPairs;
-	// 							for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-	// 							sort(distPairs.begin(), distPairs.end());
-	// 							layerEdgeLists[i][n].clear();
-	// 							for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 			ep = selectedNeighbors[0];
-	// 		}
-	// 	}
-	// }
-	
-	// int lmax = min(l,maxLyer);
-	// int lsz = min(lsz,40);
-
-	// #pragma omp parallel num_threads(40)
-	// {
-	// 	#pragma omp single
-	// 	{
-	// 		for(int i=lmax; i>=0; i--) {
-	// 			#pragma omp task firstprivate(i)
-	// 			{
-	// 				int MM = l == 0 ? MMax0 : MMax;
-	// 				vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
-	// 				vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
-
-	// 				for(int n : selectedNeighbors) addEdge(n,nid,i);
-
-	// 				int sz = selectedNeighbors.size();
-
-	// 				for(int j=0; j<sz; j++) {
-	// 					#pragma omp task firstprivate(i,j)
-	// 					{
-	// 						int n = selectedNeighbors[j];
-	// 						int layersize = layerEdgeLists[i][n].size();
-	// 						if(layersize > MM) {
-	// 							if(layersize <= MM * 2) {
-	// 								layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-	// 							} else {
-	// 								vector<pair<double, int>> distPairs;
-	// 								for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-	// 								sort(distPairs.begin(), distPairs.end());
-	// 								layerEdgeLists[i][n].clear();
-	// 								for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-	// 							}
-	// 						}
-	// 					}
-						
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	
-
-
-
-
-
-
-
 	for (int i = min(l, maxLyer); i >= 0; i--) {
 		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
 		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
@@ -329,24 +243,14 @@ void HNSWGraph::Insert(Item& q) {
 				}
 			}
 		}
-
-		
-		// for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
-		// 	if (layerEdgeLists[i][n].size() > MM) {
-		// 		vector<pair<double, int>> distPairs;
-		// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-		// 		sort(distPairs.begin(), distPairs.end());
-		// 		layerEdgeLists[i][n].clear();
-		// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-		// 	}
-		// }
 		ep = selectedNeighbors[0];
 	}
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
 
 void HNSWGraph::merge(HNSWGraph& other) {
-	for (int lc = 0; lc < other.layerEdgeLists.size(); ++lc) {
+	vector<unordered_map<int, vector<int>>> layerEdgeLists;
+	for (int lc = 0; lc<other.layerEdgeLists.size(); lc++) {
         if (lc >= layerEdgeLists.size()) {
             // 현재 그래프에 없는 계층이면 추가
             layerEdgeLists.push_back(other.layerEdgeLists[lc]);
