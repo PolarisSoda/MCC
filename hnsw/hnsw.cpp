@@ -88,6 +88,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
             int thread_id = omp_get_thread_num();
             double td = q.dist(items[ep]);
 
+			cout << thread_id << endl;
             local_candidates[thread_id].insert(make_pair(td, ep));
             local_nearestNeighbors[thread_id].insert(make_pair(td, ep));
             SearchWorker(thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, local_ef, q);
