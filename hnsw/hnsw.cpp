@@ -77,13 +77,13 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
     nearestNeighbors.insert(make_pair(td, ep));
     isVisited.insert(ep);
 
-    int local_ef = ef / 16 + 2;
+    int local_ef = ef / 4 + 2;
 
-    alignas(128) vector<set<pair<double,int>>> local_cand(16);
-    alignas(128) vector<set<pair<double,int>>> local_nearest(16);
-    alignas(128) vector<unordered_set<int>> local_visit(16);
+    alignas(128) vector<set<pair<double,int>>> local_cand(4);
+    alignas(128) vector<set<pair<double,int>>> local_nearest(4);
+    alignas(128) vector<unordered_set<int>> local_visit(4);
 
-    #pragma omp parallel num_threads(16)
+    #pragma omp parallel num_threads(4)
     {
         #pragma omp single
         {
@@ -124,15 +124,15 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end());
+                    for(int i = 0; i < 16; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end()), local_visit[i].clear();
                 }
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end());
+                    for(int i = 0; i < 16; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end()), local_cand[i].clear();
                 }
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end());
+                    for(int i = 0; i < 16; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end()), local_nearest[i].clear();
                     while(nearestNeighbors.size() > ef) {
                         auto temp_fi = nearestNeighbors.end();
                         temp_fi--;
