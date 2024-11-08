@@ -105,7 +105,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 				auto new_fi = local_nearest[id].end();
 				double new_td = q.dist(items[ed]);
-				double threshold = min(fi_dist,local_nearest.size() == 0 ? INT_MAX : (--new_fi)->first);
+				double threshold = min(fi_dist,local_nearest.size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
 				
 				if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
 					local_cand[id].insert(make_pair(td, ed));
