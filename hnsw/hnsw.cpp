@@ -104,7 +104,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
                         int id = omp_get_thread_num();
 
                         if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) {
-                            continue;
+                            break;
                         }
                         local_visit[id].insert(ed);
 
@@ -117,6 +117,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
                             local_nearest[id].insert(make_pair(new_td, ed));
                             if(local_nearest[id].size() > local_ef) local_nearest[id].erase(new_fi);
                         }
+						END:
                     }
                 }
 
