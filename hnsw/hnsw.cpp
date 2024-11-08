@@ -83,7 +83,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	
 	#pragma omp parallel num_threads(4)
     {
-        #pragma omp master
+        #pragma omp single
         {
             int thread_id = omp_get_thread_num();
             double td = q.dist(items[ep]);
