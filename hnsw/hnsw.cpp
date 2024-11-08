@@ -254,48 +254,47 @@ void HNSWGraph::Insert(Item& q) {
 	// 	}
 	// }
 	
-	int lmax = min(l,maxLyer);
-	int lsz = min(lsz,40);
+	// int lmax = min(l,maxLyer);
+	// int lsz = min(lsz,40);
 
-	#pragma omp parallel num_threads(40)
-	{
-		#pragma omp single
-		{
-			for(int i=lmax; i>=0; i--) {
-				#pragma omp task firstprivate(i)
-				{
-					int MM = l == 0 ? MMax0 : MMax;
-					vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
-					vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
+	// #pragma omp parallel num_threads(40)
+	// {
+	// 	#pragma omp single
+	// 	{
+	// 		for(int i=lmax; i>=0; i--) {
+	// 			#pragma omp task firstprivate(i)
+	// 			{
+	// 				int MM = l == 0 ? MMax0 : MMax;
+	// 				vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
+	// 				vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
 
-					for(int n : selectedNeighbors) addEdge(n,nid,i);
+	// 				for(int n : selectedNeighbors) addEdge(n,nid,i);
 
-					int sz = selectedNeighbors.size();
+	// 				int sz = selectedNeighbors.size();
 
-					for(int j=0; j<sz; j++) {
-						#pragma omp task firstprivate(i,j)
-						{
-							int n = selectedNeighbors[j];
-							int layersize = layerEdgeLists[i][n].size();
-							if(layersize > MM) {
-								srand(time(NULL));
-								int resize_random = rand()%2;
-								if(resize_random) {
-									layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-								} else {
-									vector<pair<double, int>> distPairs;
-									for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-									sort(distPairs.begin(), distPairs.end());
-									layerEdgeLists[i][n].clear();
-									for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	// 				for(int j=0; j<sz; j++) {
+	// 					#pragma omp task firstprivate(i,j)
+	// 					{
+	// 						int n = selectedNeighbors[j];
+	// 						int layersize = layerEdgeLists[i][n].size();
+	// 						if(layersize > MM) {
+	// 							if(layersize <= MM * 2) {
+	// 								layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
+	// 							} else {
+	// 								vector<pair<double, int>> distPairs;
+	// 								for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+	// 								sort(distPairs.begin(), distPairs.end());
+	// 								layerEdgeLists[i][n].clear();
+	// 								for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+	// 							}
+	// 						}
+	// 					}
+						
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 	
 
 
