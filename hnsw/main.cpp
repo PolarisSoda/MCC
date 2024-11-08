@@ -75,7 +75,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "START BUILDING INDEX" << endl;
 
 	//Original 20 30 30 30 4
-	HNSWGraph myHNSWGraph(20, 30, 30, 25, 4); //We are Able to modify this parameters.
+	HNSWGraph myHNSWGraph(20, 30, 30, 20, 4); //We are Able to modify this parameters.
 	// Number of neighbors
 	// Max number of neighbors in layers >= 1
 	// Max number of neighbors in layers 0
