@@ -93,7 +93,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
 		alignas(64) vector<unordered_set<int>> local_visit(40);
 
-		#pragma omp parallel num_threads(40) shared(local_cand,local_nearest,local_visit)
+		#pragma omp parallel num_threads(40)
 		{
 			#pragma omp for schedule(dynamic)
 			for(int j=0; j<layersize; j++) {
