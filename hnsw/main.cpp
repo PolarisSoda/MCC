@@ -75,7 +75,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "START BUILDING INDEX" << endl;
 
 	//Original 20 30 30 30 4
-	HNSWGraph myHNSWGraph(20, 30, 30, 30, 4); //We are Able to modify this parameters.
+	HNSWGraph myHNSWGraph(20, 30, 30, 10, 2); //We are Able to modify this parameters.
 	// Number of neighbors
 	// Max number of neighbors in layers >= 1
 	// Max number of neighbors in layers 0
@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
 		opt_cnt++;
 	}
 	omp_set_num_threads(numThreads);
-	omp_set_nested(1);
+
 	if(argc < 2){
 		fprintf(stderr, "Usage: %s -k {number of nearest neighbors} -t {number of threads} -w {workload num} \nFor example, %s -k10 -t10 -w1\n", argv[0], argv[0]);
 		exit(0);

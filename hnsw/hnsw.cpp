@@ -174,8 +174,6 @@ void HNSWGraph::Insert(Item& q) {
 	int lmax = min(l,maxLyer);
 	int lsz = min(lsz,40);
 
-	vector<vector<int>> neighbors_list(lmax);
-	vector<vector<int>> selectedNeighbors_list(lmax);
 	#pragma omp parallel num_threads(40)
 	{
 		#pragma omp single
