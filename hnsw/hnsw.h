@@ -28,6 +28,7 @@ struct Item {
 		double result = 0.0;
 		int sz = (int)values.size();
 
+		#pragma omp parallel for schedule(static) reduction(+ : result) num_threads(8)
 		for (int i = 0; i < sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
