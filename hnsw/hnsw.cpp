@@ -15,7 +15,7 @@ using namespace std;
 
 void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
 	using_thread++;
-
+	
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
 		int nid = ci->second;
@@ -32,7 +32,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 			double td = q.dist(items[ed]);
 
 			if ((td < fi->first) || local_nearestNeighbors[thread_id].size() < ef) {
-				if(false) {
+				if(using_thread >= 40) {
 					local_candidates[thread_id].insert(make_pair(td, ed));
 					local_nearestNeighbors[thread_id].insert(make_pair(td, ed));
 					if (local_nearestNeighbors[thread_id].size() > ef) local_nearestNeighbors[thread_id].erase(fi);
@@ -40,7 +40,6 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 					#pragma omp task firstprivate(td,ed)
 					{	
 						int new_thread_id = omp_get_thread_num();
-						cout << "!" << new_thread_id << " ";
 						local_candidates[new_thread_id].insert(make_pair(td,ed));
 						local_nearestNeighbors[new_thread_id].insert(make_pair(td,ed));
 						SearchWorker(new_thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,ef,q);
@@ -75,7 +74,11 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		local_candidates[thread_id].insert(make_pair(td,ep));
 		local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
-		SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
+		#pragma omp task
+		{
+			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
+		}
+		
 		using_thread--;
 	}
 
