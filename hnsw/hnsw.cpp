@@ -93,11 +93,13 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
 		alignas(64) vector<unordered_set<int>> local_visit(40);
 
-		#pragma omp parallel firstprivate(fi_dist) num_threads(4)
+		vector<int> cp_layer = layerEdgeLists[lc][nid];
+
+		#pragma omp parallel firstprivate(fi_dist,cp_layer) num_threads(4)
 		{
 			#pragma omp for
 			for(int j=0; j<layersize; j++) {
-				int ed = layerEdgeLists[lc][nid][j];
+				int ed = cp_layer[j];
 				int id = omp_get_thread_num();
 
 				if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) continue;
