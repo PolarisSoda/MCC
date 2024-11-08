@@ -124,15 +124,15 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end()), local_visit[i].clear();
+                    for(int i = 0; i < 4; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end()), local_visit[i].clear();
                 }
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end()), local_cand[i].clear();
+                    for(int i = 0; i < 4; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end()), local_cand[i].clear();
                 }
                 #pragma omp task
                 {
-                    for(int i = 0; i < 16; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end()), local_nearest[i].clear();
+                    for(int i = 0; i < 4; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end()), local_nearest[i].clear();
                     while(nearestNeighbors.size() > ef) {
                         auto temp_fi = nearestNeighbors.end();
                         temp_fi--;
