@@ -65,21 +65,18 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	vector<set<pair<double,int>>> local_candidates(thread_cnt);
 	vector<set<pair<double,int>>> local_nearestNeighbors(thread_cnt);
 	
-	#pragma omp parallel num_threads(thread_cnt)
-	{
-		#pragma omp single nowait 
-		{	
-			using_thread++;
-			int thread_id = omp_get_thread_num();
-			double td = q.dist(items[ep]);
+	
+	#pragma omp single nowait 
+	{	
+		using_thread++;
+		int thread_id = omp_get_thread_num();
+		double td = q.dist(items[ep]);
 
-			local_candidates[thread_id].insert(make_pair(td,ep));
-			local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
-			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
-			using_thread--;
-		}
+		local_candidates[thread_id].insert(make_pair(td,ep));
+		local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
+		SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
+		using_thread--;
 	}
-	#pragma omp barrier
 	set<pair<double,int>> finals;
 
 	for(const auto& s : local_nearestNeighbors) {
