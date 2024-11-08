@@ -47,6 +47,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 			}
 		}
 	}
+	using_thread--;
 }
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
