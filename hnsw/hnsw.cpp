@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,int &lock_isVisited,int lc,int ef, Item& q) {
+void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
 	using_thread++;
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
@@ -23,14 +23,25 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 		if (ci->first > fi->first) break;
 
 		for (int ed: layerEdgeLists[lc][nid]) {
-			#pragma omp atomic
-			lock_isVisited = 1;
-
-			isVisited.insert(ed);
-
-			#pragma omp atomic
-			lock_isVisited = 0;
+			int atmpt = 5;
+			bool continued = false;
+			while(atmpt) {
+				if(omp_test_lock(&lock_isVisited)) {
+					if (isVisited.find(ed) != isVisited.end()) {
+						continue = true;
+						omp_unset_lock(&lock_isVisited);
+						break;
+					} else {
+						isVisited.insert(ed);
+						omp_unset_lock(&lock_isVisited);
+						break;
+					}
+				}
+				atmpt--;
+			}
 			
+			if(continued) continue;
+
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
 
@@ -58,7 +69,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 	unordered_set<int> isVisited;
 	isVisited.insert(ep);
-	int using_isVisited = false;
+	omp_lock_t lock_isVisited;
+	omp_init_lock(&lock_isVisited);
 
 	int thread_cnt = omp_get_num_threads();
 	int local_ef = ef / thread_cnt + 4;
@@ -76,7 +88,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 			local_candidates[thread_id].insert(make_pair(td,ep));
 			local_nearestNeighbors[thread_id].insert(make_pair(td,ep));
-			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,using_isVisited,lc,local_ef,q);
+			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
 			using_thread--;
 		}
 	}
