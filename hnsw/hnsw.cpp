@@ -89,6 +89,10 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		int layersize = layerEdgeLists[lc][nid].size();
 		double fi_dist = fi->first;
 
+		double td = q.dist(items[ep]);
+		candidates.insert(make_pair(td, ep));
+		nearestNeighbors.insert(make_pair(td, ep));
+		
 		alignas(64) vector<set<pair<double,int>>> local_cand(40);
 		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
 		alignas(64) vector<unordered_set<int>> local_visit(40);
