@@ -318,7 +318,8 @@ void HNSWGraph::Insert(Item& q) {
 			int n = selectedNeighbors[j];
 			int layersize = layerEdgeLists[i][n].size();
 			if(layersize > MM) {
-				if(layersize <= MM * 2) {
+				int resize_random = rand()%2;
+				if(resize_random) {
 					layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
 				} else {
 					vector<pair<double, int>> distPairs;
