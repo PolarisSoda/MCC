@@ -108,14 +108,13 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				double threshold = min(fi_dist,local_nearest.size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
 				
 				if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
-					local_cand[id].insert(make_pair(td, ed));
-					local_nearest[id].insert(make_pair(td, ed));
+					local_cand[id].insert(make_pair(new_td, ed));
+					local_nearest[id].insert(make_pair(new_td, ed));
 					if(local_nearest[id].size() > local_ef) local_nearest[id].erase(new_fi);
 				}
 			}
 			#pragma omp barrier
 		}
-		for(int i=0; i<40; i++) cout << local_cand[i].size() << endl;
 		for(int i=0; i<40; i++) isVisited.insert(local_visit[i].begin(),local_visit[i].end());
 		for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
 		for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
