@@ -78,7 +78,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	alignas(64) vector<HNSWGraph> local_hnsw(numThreads,HNSWGraph(20,30,30,30,4));
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 
-	#pragma omp parallel num_threads(numThreads)
+	#pragma omp parallel num_threads(2)
 	{
 		#pragma omp single
 		{
