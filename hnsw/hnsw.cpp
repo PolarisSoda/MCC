@@ -176,29 +176,39 @@ void HNSWGraph::Insert(Item& q) {
 
 	vector<vector<int>> neighbors_list(lmax);
 	vector<vector<int>> selectedNeighbors_list(lmax);
-	#pragma omp parallel num_threads(lsz)
+	#pragma omp parallel num_threads(40)
 	{
-		#pragma omp for
-		for(int i=lmax; i>=0; i--) {
-			int MM = l == 0 ? MMax0 : MMax;
-			vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
-			vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
-			for(int n : selectedNeighbors) addEdge(n,nid,i);
+		#pragma omp single
+		{
+			for(int i=lmax; i>=0; i--) {
+				#pragma omp task firstprivate(i)
+				{
+					int MM = l == 0 ? MMax0 : MMax;
+					vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
+					vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
 
-			int sz = selectedNeighbors.size();
-			
-			for(int j=0; j<sz; j++) {
-				int n = selectedNeighbors[j];
-				if (layerEdgeLists[i][n].size() > MM) {
-					int resize_random = rand()%2;
-					if(resize_random) {
-						layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-					} else {
-						vector<pair<double, int>> distPairs;
-						for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-						sort(distPairs.begin(), distPairs.end());
-						layerEdgeLists[i][n].clear();
-						for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+					for(int n : selectedNeighbors) addEdge(n,nid,i);
+
+					int sz = selectedNeighbors.size();
+
+					for(int j=0; j<sz; j++) {
+						#pragma omp task firstprivate(i,j)
+						{
+							int n = selectedNeighbors[j];
+							if (layerEdgeLists[i][n].size() > MM) {
+								int resize_random = rand()%2;
+								if(resize_random) {
+									layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
+								} else {
+									vector<pair<double, int>> distPairs;
+									for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+									sort(distPairs.begin(), distPairs.end());
+									layerEdgeLists[i][n].clear();
+									for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+								}
+							}
+						}
+						
 					}
 				}
 			}
