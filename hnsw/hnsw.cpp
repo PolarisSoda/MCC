@@ -170,34 +170,48 @@ void HNSWGraph::Insert(Item& q) {
 	// 		}
 	// 	}
 	// }
-	#pragma omp parallel for num_threads(40)
-	for (int i = min(l, maxLyer); i >= 0; i--) {
-		int MM = l == 0 ? MMax0 : MMax; // 현재 레이어에서의 최대 neightbor수를 찾는다.
-		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); // neighbor 목록을 찾고.
-		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin() + min(int(neighbors.size()), M)); // 상위 M개를 가져온다.
+	
+	#pragma omp parallel
+	{
 
-		for (int n : selectedNeighbors) addEdge(n, nid, i); // 전부다 연결한 다음에
+	}
+	for (int i = min(l, maxLyer); i >= 0; i--) {
+		int MM = l == 0 ? MMax0 : MMax; //현재 레이어에서의 최대 neightbor수를 찾는다.
+		vector<int> neighbors = searchLayer(q, ep, efConstruction, i); //neightbor의 목록을 찾고.
+		vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M)); //그 중에서 상위 M개를 가져온다. 
+
+		for (int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
 
 		int sz = selectedNeighbors.size();
-		int tn = min(sz, omp_get_num_threads());
+		int tn = min(sz,omp_get_num_threads());
 
-		
-		for (int j = 0; j < sz; j++) {
+		#pragma omp parallel for num_threads(tn)
+		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
-				layerEdgeLists.resize(min(int(layerEdgeLists.size()), MM));
-				continue;
-				vector<pair<double, int>> distPairs;
-				for (int nn : layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-				sort(distPairs.begin(), distPairs.end());
-				layerEdgeLists[i][n].clear();
-				for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+				int resize_random = rand()%2;
+				if(resize_random) {
+					layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
+				} else {
+					vector<pair<double, int>> distPairs;
+					for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+					sort(distPairs.begin(), distPairs.end());
+					layerEdgeLists[i][n].clear();
+					for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+				}
 			}
 		}
 
-		// No need to update ep anymore
-		// ep = selectedNeighbors[0];  // You can leave this line out for performance
+		
+		// for(int n : selectedNeighbors) { //연결한 Neighbor들을 전부 탐색하여
+		// 	if (layerEdgeLists[i][n].size() > MM) {
+		// 		vector<pair<double, int>> distPairs;
+		// 		for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
+		// 		sort(distPairs.begin(), distPairs.end());
+		// 		layerEdgeLists[i][n].clear();
+		// 		for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
+		// 	}
+		// }
 	}
-
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
