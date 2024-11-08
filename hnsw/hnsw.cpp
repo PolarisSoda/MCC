@@ -15,7 +15,7 @@ using namespace std;
 
 void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
 	using_thread++;
-	cout << thread_id << endl;
+
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
 		int nid = ci->second;
@@ -24,7 +24,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 		if (ci->first > fi->first) break;
 
 		for (int ed: layerEdgeLists[lc][nid]) {
-			int atmpt = 1;
+			int atmpt = 2;
 			bool continued = false;
 			while(atmpt) {
 				if(omp_test_lock(&lock_isVisited)) {
@@ -42,8 +42,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 			}
 
 			if(continued) continue;
-			
-
+		
 			fi = local_nearestNeighbors[thread_id].end(); fi--;
 			double td = q.dist(items[ed]);
 
@@ -138,7 +137,7 @@ void HNSWGraph::Insert(Item& q) {
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0]; //query가 얼마 안걸렸던 것처럼 이것도 사실 별로 안걸린다. 아마도.
 
 	int tn = omp_get_num_threads();
-	#pragma omp parallel num_threads(40)
+	#pragma omp parallel num_threads(tn)
 	{
 		#pragma omp single
 		{
