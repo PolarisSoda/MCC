@@ -67,38 +67,32 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 }
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-	//this is master thread, right?
-
+	set<pair<double, int>> candidates;
+	set<pair<double, int>> nearestNeighbors;
 	unordered_set<int> isVisited;
-	isVisited.insert(ep);
-	omp_lock_t lock_isVisited;
-	omp_init_lock(&lock_isVisited);
-
-	int thread_cnt = omp_get_num_threads();
-	int local_ef = ef / thread_cnt + 4;
-
-	vector<set<pair<double,int>>> local_candidates(40);
-	vector<set<pair<double,int>>> local_nearestNeighbors(40);
-	
-        
-	int thread_id = omp_get_thread_num();
 	double td = q.dist(items[ep]);
-	local_candidates[thread_id].insert(make_pair(td, ep));
-	local_nearestNeighbors[thread_id].insert(make_pair(td, ep));
-	SearchWorker(thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, local_ef, q);
-
-	set<pair<double,int>> finals;
-
-	for(const auto& s : local_nearestNeighbors) {
-		finals.insert(s.begin(),s.end());
-		if(finals.size() > ef) {
-			auto t = finals.end(); t--;
-			finals.erase(t);
+	candidates.insert(make_pair(td, ep));
+	nearestNeighbors.insert(make_pair(td, ep));
+	isVisited.insert(ep);
+	while (!candidates.empty()) {
+		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		int nid = ci->second;
+		auto fi = nearestNeighbors.end(); fi--;
+		if (ci->first > fi->first) break;
+		for (int ed: layerEdgeLists[lc][nid]) {
+			if (isVisited.find(ed) != isVisited.end()) continue;
+			fi = nearestNeighbors.end(); fi--;
+			isVisited.insert(ed);
+			td = q.dist(items[ed]);
+			if ((td < fi->first) || nearestNeighbors.size() < ef) {
+				candidates.insert(make_pair(td, ed));
+				nearestNeighbors.insert(make_pair(td, ed));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+			}
 		}
 	}
-
 	vector<int> results;
-	for(auto &p: finals) results.push_back(p.second);
+	for(auto &p: nearestNeighbors) results.push_back(p.second);
 	return results;
 }
 
