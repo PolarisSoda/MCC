@@ -9,98 +9,97 @@
 #include <vector>
 #include <omp.h>
 #include <atomic>
+#include <cstdlib>
 
 using namespace std;
 
-void HNSWGraph::SearchWorker(int thread_id, vector<set<pair<double, int>>>& local_candidates, vector<set<pair<double, int>>>& local_nearestNeighbors, unordered_set<int>& isVisited, std::atomic_flag& lock_isVisited, int lc, int ef, Item& q) {
-    using_thread++;
+void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
+	using_thread++;
 
-    while (!local_candidates[thread_id].empty()) {
-        auto ci = local_candidates[thread_id].begin();
-        local_candidates[thread_id].erase(local_candidates[thread_id].begin());
-        int nid = ci->second;
-        auto fi = local_nearestNeighbors[thread_id].end();
-        fi--;
+	while (!local_candidates[thread_id].empty()) {
+		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
+		int nid = ci->second;
+		auto fi = local_nearestNeighbors[thread_id].end(); fi--;
 
-        if (ci->first > fi->first) break;
+		if (ci->first > fi->first) break;
 
-        for (int ed : layerEdgeLists[lc][nid]) {
-            bool continued = false;
+		for (int ed: layerEdgeLists[lc][nid]) {
+			int atmpt = 2;
+			bool continued = false;
+			while(atmpt) {
+				if(omp_test_lock(&lock_isVisited)) {
+					if (isVisited.find(ed) != isVisited.end()) {
+						continued = true;
+						omp_unset_lock(&lock_isVisited);
+						break;
+					} else {
+						isVisited.insert(ed);
+						omp_unset_lock(&lock_isVisited);
+						break;
+					}
+				}
+				atmpt--;
+			}
 
-            while (lock_isVisited.test_and_set(std::memory_order_acquire)); // 락 획득
-            if (isVisited.find(ed) != isVisited.end()) {
-                continued = true;
-            } else {
-                isVisited.insert(ed);
-            }
-            lock_isVisited.clear(std::memory_order_release); // 락 해제
+			if(continued) continue;
+		
+			fi = local_nearestNeighbors[thread_id].end(); fi--;
+			double td = q.dist(items[ed]);
 
-            if (continued) continue;
-
-            fi = local_nearestNeighbors[thread_id].end();
-            fi--;
-            double td = q.dist(items[ed]);
-
-            if ((td < fi->first) || local_nearestNeighbors[thread_id].size() < ef) {
-                if (using_thread >= 40) {
-                    local_candidates[thread_id].insert(make_pair(td, ed));
-                    local_nearestNeighbors[thread_id].insert(make_pair(td, ed));
-                    if (local_nearestNeighbors[thread_id].size() > ef) local_nearestNeighbors[thread_id].erase(fi);
-                } else {
-                    #pragma omp task firstprivate(td, ed, thread_id)
-                    {
-                        int new_thread_id = omp_get_thread_num();
-                        local_candidates[new_thread_id].insert(make_pair(td, ed));
-                        local_nearestNeighbors[new_thread_id].insert(make_pair(td, ed));
-                        SearchWorker(new_thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, ef, q);
-                    }
-                }
-            }
-        }
-    }
-    using_thread--;
+			if ((td < fi->first) || local_nearestNeighbors[thread_id].size() < ef) {
+				if(using_thread >= 40) {
+					local_candidates[thread_id].insert(make_pair(td, ed));
+					local_nearestNeighbors[thread_id].insert(make_pair(td, ed));
+					if (local_nearestNeighbors[thread_id].size() > ef) local_nearestNeighbors[thread_id].erase(fi);
+				} else {
+					#pragma omp task firstprivate(td,ed)
+					{	
+						int new_thread_id = omp_get_thread_num();
+						local_candidates[new_thread_id].insert(make_pair(td,ed));
+						local_nearestNeighbors[new_thread_id].insert(make_pair(td,ed));
+						SearchWorker(new_thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,ef,q);
+					}
+				}
+			}
+		}
+	}
+	using_thread--;
 }
 
 vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-    unordered_set<int> isVisited;
-    isVisited.insert(ep);
-    std::atomic_flag lock_isVisited = ATOMIC_FLAG_INIT;
+	//this is master thread, right?
 
-    int thread_cnt = omp_get_max_threads();
-    int local_ef = ef / thread_cnt + 2;
+	unordered_set<int> isVisited;
+	isVisited.insert(ep);
+	omp_lock_t lock_isVisited;
+	omp_init_lock(&lock_isVisited);
 
-    vector<set<pair<double, int>>> local_candidates(thread_cnt);
-    vector<set<pair<double, int>>> local_nearestNeighbors(thread_cnt);
+	int thread_cnt = omp_get_num_threads();
+	int local_ef = ef / thread_cnt + 4;
 
-    #pragma omp parallel num_threads(thread_cnt)
-    {
-        #pragma omp single nowait
-        {
-            using_thread++;
-            int thread_id = omp_get_thread_num();
-            double td = q.dist(items[ep]);
+	vector<set<pair<double,int>>> local_candidates(40);
+	vector<set<pair<double,int>>> local_nearestNeighbors(40);
+	
+        
+	int thread_id = omp_get_thread_num();
+	double td = q.dist(items[ep]);
+	local_candidates[thread_id].insert(make_pair(td, ep));
+	local_nearestNeighbors[thread_id].insert(make_pair(td, ep));
+	SearchWorker(thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, local_ef, q);
 
-            local_candidates[thread_id].insert(make_pair(td, ep));
-            local_nearestNeighbors[thread_id].insert(make_pair(td, ep));
-            SearchWorker(thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, local_ef, q);
-            using_thread--;
-        }
-    }
+	set<pair<double,int>> finals;
 
-    set<pair<double, int>> finals;
+	for(const auto& s : local_nearestNeighbors) {
+		finals.insert(s.begin(),s.end());
+		if(finals.size() > ef) {
+			auto t = finals.end(); t--;
+			finals.erase(t);
+		}
+	}
 
-    for (const auto& s : local_nearestNeighbors) {
-        finals.insert(s.begin(), s.end());
-        if (finals.size() > ef) {
-            auto t = finals.end();
-            t--;
-            finals.erase(t);
-        }
-    }
-
-    vector<int> results;
-    for (auto& p : finals) results.push_back(p.second);
-    return results;
+	vector<int> results;
+	for(auto &p: finals) results.push_back(p.second);
+	return results;
 }
 
 vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
