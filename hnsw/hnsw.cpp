@@ -121,6 +121,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		while(nearestNeighbors.size() > ef) {
 			auto temp_fi = nearestNeighbors.end();
+			temp_fi--;
 			nearestNeighbors.erase(temp_fi);
 		}
 		// for(int ed: layerEdgeLists[lc][nid]) {
