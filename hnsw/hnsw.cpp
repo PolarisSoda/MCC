@@ -172,7 +172,7 @@ void HNSWGraph::Insert(Item& q) {
 	// }
 	
 	int lsz = min({l,maxLyer,40});
-	#pragma omp parallel num_thread(lsz)
+	#pragma omp parallel num_threads(lsz)
 	{
 		#pragma omp for
 		for (int i = min(l, maxLyer); i >= 0; i--) {
