@@ -185,6 +185,7 @@ void HNSWGraph::Insert(Item& q) {
 			int sz = selectedNeighbors.size();
 			int tn = min(sz,omp_get_num_threads());
 
+			#pragma omp parallel for num_threads(40)
 			for(int j=0; j<sz; j++) {
 				int n = selectedNeighbors[j];
 				if (layerEdgeLists[i][n].size() > MM) {
