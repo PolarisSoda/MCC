@@ -24,7 +24,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 		if (ci->first > fi->first) break;
 
 		for (int ed: layerEdgeLists[lc][nid]) {
-			int atmpt = 5;
+			int atmpt = 1;
 			bool continued = false;
 			while(atmpt) {
 				if(omp_test_lock(&lock_isVisited)) {
@@ -89,8 +89,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
             local_nearestNeighbors[thread_id].insert(make_pair(td, ep));
             SearchWorker(thread_id, local_candidates, local_nearestNeighbors, isVisited, lock_isVisited, lc, local_ef, q);
         }
-
-        #pragma omp taskwait
 
 	set<pair<double,int>> finals;
 
