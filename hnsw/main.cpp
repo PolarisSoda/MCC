@@ -75,11 +75,10 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "START BUILDING INDEX" << endl;
 
 	//Original 20 30 30 30 4
-	alignas(64) vector<HNSWGraph> local_hnsw(40,HNSWGraph(20,30,30,30,4));
+	alignas(64) vector<HNSWGraph> local_hnsw(numThreads,HNSWGraph(20,30,30,30,4));
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 
-	
-	#pragma omp parallel
+	#pragma omp parallel num_threads(numThreads)
 	{
 		#pragma omp single
 		{
@@ -92,6 +91,10 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 				}
 			}
 		}
+	}
+
+	for(int i=0; i<numThreads; i++) {
+		myHNSWGraph.merge(local_hnsw[i]);
 	}
 
 	cout << endl;
