@@ -83,7 +83,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		auto fi = nearestNeighbors.end(); fi--;
 
 		if (ci->first > fi->first) break;
-
+		
+		#pragma omp parallel for
 		for (int ed: layerEdgeLists[lc][nid]) {
 			if (isVisited.find(ed) != isVisited.end()) continue;
 			fi = nearestNeighbors.end(); fi--;
