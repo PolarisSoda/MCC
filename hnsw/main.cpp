@@ -94,8 +94,9 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	}
 	vector<int> cnt_element;
 	cnt_element.push_back(0);
-	for(int i=0; i<numThreads-1; i++) cnt_element.push_back(local_hnsw[i].layerEdgeLists[0].size() + cnt_element[i]);
+	for(int i=0; i<numThreads; i++) cnt_element.push_back(local_hnsw[i].layerEdgeLists[0].size() + cnt_element[i]);
 	for(int i : cnt_element) cout << i << endl;
+	cout << cnt_element.size();
 
 	return;
 	for(int i=1; i<numThreads; i++) {
