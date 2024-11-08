@@ -95,7 +95,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		#pragma omp parallel num_threads(40) shared(local_cand,local_nearest,local_visit)
 		{
-			#pragma omp for
+			#pragma omp for schedule(dynamic)
 			for(int j=0; j<layersize; j++) {
 				int ed = layerEdgeLists[lc][nid][j];
 				int id = omp_get_thread_num();
