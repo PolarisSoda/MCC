@@ -75,10 +75,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	cout << "START BUILDING INDEX" << endl;
 
 	//Original 20 30 30 30 4
-	alignas(64) vector<HNSWGraph> local_hnsw(40);
-	for(int i=0; i<40; i++) {
-		local_hnsw[i] = HNSWGraph(20,30,30,30,4);
-	}
+	alignas(64) vector<HNSWGraph> local_hnsw(40,HNSWGraph(20,30,30,30,4));
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 	// Number of neighbors
 	// Max number of neighbors in layers >= 1
