@@ -120,7 +120,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
 		auto temp_fi = nearestNeighbors.end(); temp_fi--;
 		while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
-		cout << nearestNeighbors.size() << endl;
+		cout << candidates.size() << endl;
 		// for(int ed: layerEdgeLists[lc][nid]) {
 		// 	if (isVisited.find(ed) != isVisited.end()) continue;
 		// 	fi = nearestNeighbors.end(); fi--;
