@@ -250,6 +250,9 @@ void HNSWGraph::Insert(Item& q) {
 
 void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
 	//vector<unordered_map<int, vector<int>>> layerEdgeLists;
+	items.insert(items.end(), other.items.begin(), other.items.end());
+    itemNum += other.itemNum;
+	
 	for (int lc = 0; lc<other.layerEdgeLists.size(); lc++) {
         if (lc >= layerEdgeLists.size()) {
             // 현재 그래프에 없는 계층이면 추가
@@ -274,7 +277,6 @@ void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
 			}
         }
     }
-	
-    items.insert(items.end(), other.items.begin(), other.items.end());
-    itemNum += other.itemNum;
+
+    
 }
