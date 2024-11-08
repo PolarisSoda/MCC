@@ -256,7 +256,16 @@ void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
             layerEdgeLists.push_back(other.layerEdgeLists[lc]);
         } else {
             // 이미 존재하는 계층이면 병합
-            for(auto& node : other.layerEdgeLists[lc]) {
+			//현재 layerEdgeList[lc][left] = right, right = left
+			//other.layerEdgeList[lc]left = right, right = left;
+			vector<int> originals;
+            for(auto& our_node : layerEdgeLists[lc]) {
+				originals.push_back(our_node.first);
+				for(auto& other_node : other.layerEdgeLists[lc]) {
+					int new_other_node = thread_id + other_node.first;
+					our_node.second.push_back(new_other_node);
+					for(int o : originals) layerEdgeLists[lc][new_other_node].push_back(o);
+				}
 
                 // if (layerEdgeLists[lc].find(node.first) == layerEdgeLists[lc].end()) {
                 //     // 현재 그래프에 없는 노드이면 추가
