@@ -80,6 +80,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	int local_ef = ef / omp_get_num_threads() + 2;
 
 	while (!candidates.empty()) {
+		cout << "!" << endl;
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
 		auto fi = nearestNeighbors.end(); fi--;
@@ -88,8 +89,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		
 		int layersize = layerEdgeLists[lc][nid].size();
 		double fi_dist = fi->first;
-
-		
 
 		alignas(64) vector<set<pair<double,int>>> local_cand(40);
 		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
