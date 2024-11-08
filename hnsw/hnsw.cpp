@@ -77,7 +77,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
-	int local_ef = ef / omp_get_num_threads() + 2;
+	int local_ef = ef / 40 + 2;
 
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
@@ -94,7 +94,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		alignas(64) vector<unordered_set<int>> local_visit(40);
 		continue;
 
-		#pragma omp parallel firstprivate(fi_dist) num_threads(1)
+		#pragma omp parallel firstprivate(fi_dist) num_threads(40)
 		{
 			#pragma omp for
 			for(int j=0; j<layersize; j++) {
