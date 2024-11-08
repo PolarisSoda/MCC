@@ -78,7 +78,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	alignas(64) vector<HNSWGraph> local_hnsw(numThreads,HNSWGraph(20,30,30,30,4));
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 
-	#pragma omp parallel num_threads(2)
+	#pragma omp parallel num_threads(numThreads)
 	{
 		#pragma omp single
 		{
@@ -87,14 +87,21 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 				#pragma omp task firstprivate(i)
 				{
 					int id = omp_get_thread_num();
-					local_hnsw[id].Insert(randomItems[i],id);
+					local_hnsw[id].Insert(randomItems[i]);
 				}
 			}
 		}
 	}
-
+	int checker = 0;
 	for(int i=0; i<numThreads; i++) {
-		myHNSWGraph.merge(local_hnsw[i]);
+		int temp = local_hnsw[i].layerEdgeLists[0].size();
+		cout << temp << endl;
+		checker += temp;
+	}
+	cout << temp << endl;
+	return;
+	for(int i=1; i<numThreads; i++) {
+		myHNSWGraph.merge(local_hnsw[i],i);
 	}
 
 	cout << endl;

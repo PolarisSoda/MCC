@@ -197,8 +197,8 @@ void HNSWGraph::addEdge(int st, int ed, int lc) {
 	layerEdgeLists[lc][ed].push_back(st);
 }
 
-void HNSWGraph::Insert(Item& q,int thread_id) {
-	int nid = items.size() + thread_id * 10000;
+void HNSWGraph::Insert(Item& q) {
+	int nid = items.size();
 	itemNum++; items.push_back(q);
 
 	// sample layer
@@ -248,26 +248,27 @@ void HNSWGraph::Insert(Item& q,int thread_id) {
 	if (l == layerEdgeLists.size() - 1) enterNode = nid;
 }
 
-void HNSWGraph::merge(HNSWGraph& other) {
-	vector<unordered_map<int, vector<int>>> layerEdgeLists;
+void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
+	//vector<unordered_map<int, vector<int>>> layerEdgeLists;
 	for (int lc = 0; lc<other.layerEdgeLists.size(); lc++) {
         if (lc >= layerEdgeLists.size()) {
             // 현재 그래프에 없는 계층이면 추가
             layerEdgeLists.push_back(other.layerEdgeLists[lc]);
         } else {
             // 이미 존재하는 계층이면 병합
-            for (const auto& node : other.layerEdgeLists[lc]) {
-                if (layerEdgeLists[lc].find(node.first) == layerEdgeLists[lc].end()) {
-                    // 현재 그래프에 없는 노드이면 추가
-                    layerEdgeLists[lc][node.first] = node.second;
-                } else {
-                    // 이미 존재하는 노드이면 엣지 병합
-                    vector<int>& edges = layerEdgeLists[lc][node.first];
-                    edges.insert(edges.end(), node.second.begin(), node.second.end());
-                    // 중복된 엣지 제거
-                    sort(edges.begin(), edges.end());
-                    edges.erase(unique(edges.begin(), edges.end()), edges.end());
-                }
+            for(auto& node : other.layerEdgeLists[lc]) {
+
+                // if (layerEdgeLists[lc].find(node.first) == layerEdgeLists[lc].end()) {
+                //     // 현재 그래프에 없는 노드이면 추가
+                //     layerEdgeLists[lc][node.first] = node.second;
+                // } else {
+                //     // 이미 존재하는 노드이면 엣지 병합
+                //     vector<int>& edges = layerEdgeLists[lc][node.first];
+                //     edges.insert(edges.end(), node.second.begin(), node.second.end());
+                //     // 중복된 엣지 제거
+                //     sort(edges.begin(), edges.end());
+                //     edges.erase(unique(edges.begin(), edges.end()), edges.end());
+                // }
             }
         }
     }

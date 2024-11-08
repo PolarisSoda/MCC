@@ -75,10 +75,10 @@ struct HNSWGraph {
 	// methods
 	void addEdge(int st, int ed, int lc);
 	vector<int> searchLayer(Item& q, int ep, int ef, int lc);
-	void Insert(Item& q,int thread_id);
+	void Insert(Item& q);
 	vector<int> KNNSearch(Item& q, int K);
 	void SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q);
-	void merge(HNSWGraph& other);
+	void merge(HNSWGraph& other,int thread_id);
 
 	// This will not be used....
 	void printGraph() {
