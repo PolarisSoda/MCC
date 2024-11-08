@@ -13,7 +13,6 @@
 #include <set>
 #include <fstream>
 #include <shared_mutex>
-#pragma GCC optimize("O3")
 
 using namespace std;
 
