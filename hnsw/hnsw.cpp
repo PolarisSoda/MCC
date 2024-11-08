@@ -131,6 +131,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				auto temp_fi = nearestNeighbors.end(); temp_fi--;
 				while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
 			}
+			#pragma omp barrier
 		}
 
 		// for(int ed: layerEdgeLists[lc][nid]) {
