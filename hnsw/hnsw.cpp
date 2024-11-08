@@ -28,7 +28,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 			while(atmpt) {
 				if(omp_test_lock(&lock_isVisited)) {
 					if (isVisited.find(ed) != isVisited.end()) {
-						continue = true;
+						continued = true;
 						omp_unset_lock(&lock_isVisited);
 						break;
 					} else {
