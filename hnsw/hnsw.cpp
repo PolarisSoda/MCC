@@ -14,6 +14,7 @@
 using namespace std;
 
 void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_candidates,vector<set<pair<double,int>>>& local_nearestNeighbors,unordered_set<int>& isVisited,omp_lock_t &lock_isVisited,int lc,int ef, Item& q) {
+	cout << thread_id << endl;
 	using_thread++;
 	while (!local_candidates[thread_id].empty()) {
 		auto ci = local_candidates[thread_id].begin(); local_candidates[thread_id].erase(local_candidates[thread_id].begin());
