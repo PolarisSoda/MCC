@@ -81,7 +81,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	vector<set<pair<double,int>>> local_candidates(thread_cnt);
 	vector<set<pair<double,int>>> local_nearestNeighbors(thread_cnt);
 	
-	#pragma omp parallel num_threads(40)
+	#pragma omp parallel num_threads(4)
     {
         #pragma omp single nowait
         {
@@ -192,7 +192,7 @@ void HNSWGraph::Insert(Item& q) {
 		int sz = selectedNeighbors.size();
 		int tn = min(sz,omp_get_num_threads());
 
-		#pragma omp parallel for num_threads(tn)
+		#pragma omp parallel for num_threads(4)
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			if (layerEdgeLists[i][n].size() > MM) {
