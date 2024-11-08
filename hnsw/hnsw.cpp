@@ -193,9 +193,9 @@ void HNSWGraph::Insert(Item& q) {
 						#pragma omp task firstprivate(i,j)
 						{
 							int n = selectedNeighbors[j];
-							if (layerEdgeLists[i][n].size() > MM) {
-								int resize_random = rand()%2;
-								if(resize_random) {
+							int layersize = layerEdgeLists[i][n].size();
+							if(layersize > MM) {
+								if(layersize <= MM * 2) {
 									layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
 								} else {
 									vector<pair<double, int>> distPairs;
