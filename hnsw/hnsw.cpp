@@ -105,7 +105,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				
 				auto new_fi = local_nearest[id].end();
 				double new_td = q.dist(items[ed]);
-				double threshold = min(fi_dist,local_nearest.size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
+				double threshold = min(fi_dist,local_nearest[id].size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
 				
 				if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
 					local_cand[id].insert(make_pair(new_td, ed));
@@ -118,8 +118,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		for(int i=0; i<40; i++) isVisited.insert(local_visit[i].begin(),local_visit[i].end());
 		for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
 		for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
-		cout << candidates.size() << " " << nearestNeighbors.size() << endl;
-		
+
 		auto temp_fi = nearestNeighbors.end(); temp_fi--;
 		while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
 		// for(int ed: layerEdgeLists[lc][nid]) {
