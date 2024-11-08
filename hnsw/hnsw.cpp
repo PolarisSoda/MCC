@@ -68,6 +68,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	
 	#pragma omp single nowait 
 	{	
+		cout << omp_get_max_threads() << endl;
 		using_thread++;
 		int thread_id = omp_get_thread_num();
 		double td = q.dist(items[ep]);
@@ -77,6 +78,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
 		using_thread--;
 	}
+
 	set<pair<double,int>> finals;
 
 	for(const auto& s : local_nearestNeighbors) {
