@@ -98,7 +98,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 		cout << temp << endl;
 		checker += temp;
 	}
-	cout << temp << endl;
+	cout << checker << endl;
 	return;
 	for(int i=1; i<numThreads; i++) {
 		myHNSWGraph.merge(local_hnsw[i],i);
