@@ -80,7 +80,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	int local_ef = ef / omp_get_num_threads() + 2;
 
 	while (!candidates.empty()) {
-		cout << "!" << endl;
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
 		auto fi = nearestNeighbors.end(); fi--;
@@ -94,7 +93,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
 		alignas(64) vector<unordered_set<int>> local_visit(40);
 		continue;
-		
+
 		#pragma omp parallel firstprivate(fi_dist) num_threads(1)
 		{
 			#pragma omp for
@@ -116,24 +115,12 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				}
 			}
 			#pragma omp barrier
-
-			#pragma omp single nowait
-			{
-				for(int i=0; i<40; i++) isVisited.insert(local_visit[i].begin(),local_visit[i].end());
-			}
-			#pragma omp single nowait
-			{
-				for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
-			}
-			#pragma omp single nowait
-			{
-				for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
-				auto temp_fi = nearestNeighbors.end(); temp_fi--;
-				while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
-			}
-			#pragma omp barrier
 		}
-
+		for(int i=0; i<40; i++) isVisited.insert(local_visit[i].begin(),local_visit[i].end());
+		for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
+		for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
+		auto temp_fi = nearestNeighbors.end(); temp_fi--;
+		while(nearestNeighbors.size() > ef) temp_fi = nearestNeighbors.erase(temp_fi);
 		// for(int ed: layerEdgeLists[lc][nid]) {
 		// 	if (isVisited.find(ed) != isVisited.end()) continue;
 		// 	fi = nearestNeighbors.end(); fi--;
