@@ -27,8 +27,7 @@ struct Item {
 	double dist(Item& other) {
 		double result = 0.0;
 		int sz = (int)values.size();
-
-		#pragma omp parallel for schedule(static) reduction(+ : result) num_threads(2)
+		
 		for (int i = 0; i < sz; i++) {
 			double diff = values[i] - other.values[i];
 			result += diff * diff;
