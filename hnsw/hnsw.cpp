@@ -171,36 +171,18 @@ void HNSWGraph::Insert(Item& q) {
 	// 	}
 	// }
 	
-	int lsz = min({l,maxLyer,40});
+	int lmax = min(l,maxLyer);
+	int lsz = min(lsz,40);
+
+	vector<vector<int>> neighbors_list(lmax);
+	vector<vector<int>> selectedNeighbors_list(lmax);
 	#pragma omp parallel num_threads(lsz)
 	{
 		#pragma omp for
-		for (int i = min(l, maxLyer); i >= 0; i--) {
+		for(int i=lmax; i>=0; i--) {
 			int MM = l == 0 ? MMax0 : MMax;
 			vector<int> neighbors = searchLayer(q, ep, efConstruction, i);
 			vector<int> selectedNeighbors = vector<int>(neighbors.begin(), neighbors.begin()+min(int(neighbors.size()), M));
-
-			for(int n: selectedNeighbors) addEdge(n, nid, i); //전부다 연결한 다음에
-
-			int sz = selectedNeighbors.size();
-			int tn = min(sz,omp_get_num_threads());
-
-			#pragma omp parallel for num_threads(2)
-			for(int j=0; j<sz; j++) {
-				int n = selectedNeighbors[j];
-				if (layerEdgeLists[i][n].size() > MM) {
-					int resize_random = rand()%2;
-					if(resize_random) {
-						layerEdgeLists[i][n].resize(min(int(layerEdgeLists[i][n].size()), MM));
-					} else {
-						vector<pair<double, int>> distPairs;
-						for (int nn: layerEdgeLists[i][n]) distPairs.emplace_back(items[n].dist(items[nn]), nn);
-						sort(distPairs.begin(), distPairs.end());
-						layerEdgeLists[i][n].clear();
-						for (int d = 0; d < min(int(distPairs.size()), MM); d++) layerEdgeLists[i][n].push_back(distPairs[d].second);
-					}
-				}
-			}
 		}
 	}
 	// for (int i = min(l, maxLyer); i >= 0; i--) {
