@@ -130,8 +130,7 @@ void HNSWGraph::Insert(Item& q) {
 	int ep = enterNode;
 	for (int i = maxLyer; i > l; i--) ep = searchLayer(q, ep, 1, i)[0]; //query가 얼마 안걸렸던 것처럼 이것도 사실 별로 안걸린다. 아마도.
 
-	int tn = omp_get_num_threads();
-	#pragma omp parallel num_threads(tn)
+	#pragma omp parallel num_threads(40)
 	{
 		#pragma omp single
 		{
