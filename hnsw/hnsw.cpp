@@ -313,7 +313,6 @@ void HNSWGraph::Insert(Item& q) {
 		int sz = selectedNeighbors.size();
 		int tn = min(sz,omp_get_num_threads());
 
-		#pragma omp parallel for num_threads(tn)
 		for(int j=0; j<sz; j++) {
 			int n = selectedNeighbors[j];
 			int layersize = layerEdgeLists[i][n].size();
