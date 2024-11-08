@@ -88,7 +88,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 				#pragma omp task firstprivate(i)
 				{
 					int id = omp_get_thread_num();
-					local_hnsw[i].Insert(randomItems[i]);
+					local_hnsw[id].Insert(randomItems[i]);
 				}
 			}
 		}
