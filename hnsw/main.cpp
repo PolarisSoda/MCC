@@ -77,39 +77,22 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	//Original 20 30 30 30 4
 	alignas(64) vector<HNSWGraph> local_hnsw(40,HNSWGraph(20,30,30,30,4));
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
-	// Number of neighbors
-	// Max number of neighbors in layers >= 1
-	// Max number of neighbors in layers 0
-	// Search numbers in construction
-	// Max number of layers
+
 	
-	// for(int i=0; i<numItems; i++) {
-	// 	if(i % 10000 == 0) {
-	// 		myHNSWGraph.efConstruction -= 2;
-	// 		cout << "." << std::flush;
-	// 	}
-	// 	myHNSWGraph.Insert(randomItems[i]);
-	// }
-	#pragma omp parallel for num_threads(40)
-	for(int i=0; i<numItems; i++) {
-		if(i % 10000 == 0) cout << "." << std::flush;
-		int id = omp_get_thread_num();
-		local_hnsw[id].Insert(randomItems[i]);
+	#pragma omp parallel
+	{
+		#pragma omp single
+		{
+			for(int i=0; i<numItems; i++) {
+				if(i % 10000 == 0) cout << "." << std::flush;
+				#pragma omp task firstprivate(i)
+				{
+					int id = omp_get_thread_num();
+					local_hnsw[i].Insert(randomItems[i]);
+				}
+			}
+		}
 	}
-	return;
-	// #pragma omp parallel
-	// {
-	// 	#pragma omp single
-	// 	{
-	// 		for(int i=0; i<numItems; i++) {
-	// 			if(i % 10000 == 0) cout << "." << std::flush;
-    //             #pragma omp task firstprivate(i)
-    //             {
-    //                 myHNSWGraph.Insert(randomItems[i]);
-    //             }
-    //         }
-	// 	}
-	// }
 
 	cout << endl;
 
