@@ -78,12 +78,12 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	int thread_cnt = omp_get_num_threads();
 	int local_ef = ef / thread_cnt + 4;
 
-	vector<set<pair<double,int>>> local_candidates(thread_cnt);
-	vector<set<pair<double,int>>> local_nearestNeighbors(thread_cnt);
+	vector<set<pair<double,int>>> local_candidates(40);
+	vector<set<pair<double,int>>> local_nearestNeighbors(40);
 	
 	#pragma omp parallel num_threads(4)
     {
-        #pragma omp single nowait
+        #pragma omp master
         {
             int thread_id = omp_get_thread_num();
             double td = q.dist(items[ep]);
