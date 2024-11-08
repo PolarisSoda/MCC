@@ -47,7 +47,7 @@ void HNSWGraph::SearchWorker(int thread_id, vector<set<pair<double, int>>>& loca
                     local_nearestNeighbors[thread_id].insert(make_pair(td, ed));
                     if (local_nearestNeighbors[thread_id].size() > ef) local_nearestNeighbors[thread_id].erase(fi);
                 } else {
-                    #pragma omp task firstprivate(td, ed)
+                    #pragma omp task firstprivate(td, ed, thread_id)
                     {
                         int new_thread_id = omp_get_thread_num();
                         local_candidates[new_thread_id].insert(make_pair(td, ed));
