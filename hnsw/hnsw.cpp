@@ -100,9 +100,9 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 				int ed = layerEdgeLists[lc][nid][j];
 				int id = omp_get_thread_num();
 
-				if(isVisited.find(ed) != isVisited.end() && local_visit[id].find(ed) != local_visit[id].end()) continue;
+				if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) continue;
 				local_visit[id].insert(ed);
-				cout << "HI" << endl;
+				
 				auto new_fi = local_nearest[id].end();
 				double new_td = q.dist(items[ed]);
 				double threshold = min(fi_dist,local_nearest.size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
