@@ -92,13 +92,11 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 			}
 		}
 	}
-	int checker = 0;
-	for(int i=0; i<numThreads; i++) {
-		int temp = local_hnsw[i].layerEdgeLists[0].size();
-		cout << temp << endl;
-		checker += temp;
-	}
-	cout << checker << endl;
+	vector<int> cnt_element;
+	cnt_element.push_back(0);
+	for(int i=0; i<numThreads-1; i++) cnt_element.push_back(local_hnsw[i].layerEdgeLists[0].size() + cnt_element[i]);
+	for(int i : cnt_element) cout << i << endl;
+
 	return;
 	for(int i=1; i<numThreads; i++) {
 		myHNSWGraph.merge(local_hnsw[i],i);
