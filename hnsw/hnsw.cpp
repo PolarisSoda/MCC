@@ -200,7 +200,6 @@ void HNSWGraph::Insert(Item& q) {
 					}
 				}
 			}
-			ep = selectedNeighbors[0];
 		}
 	}
 	// for (int i = min(l, maxLyer); i >= 0; i--) {
