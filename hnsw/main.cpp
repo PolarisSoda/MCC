@@ -90,7 +90,7 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	// 	}
 	// 	myHNSWGraph.Insert(randomItems[i]);
 	// }
-	#pragma omp parallel for num_threads(40);
+	#pragma omp parallel for num_threads(40)
 	for(int i=0; i<numItems; i++) {
 		if(i % 10000 == 0) cout << "." << std::flush;
 		int id = omp_get_thread_num();
