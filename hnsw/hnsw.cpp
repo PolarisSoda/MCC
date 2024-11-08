@@ -256,29 +256,22 @@ void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
             layerEdgeLists.push_back(other.layerEdgeLists[lc]);
         } else {
             // 이미 존재하는 계층이면 병합
-			//현재 layerEdgeList[lc][left] = right, right = left
-			//other.layerEdgeList[lc]left = right, right = left;
-			vector<int> originals;
             for(auto& our_node : layerEdgeLists[lc]) {
-				originals.push_back(our_node.first);
 				for(auto& other_node : other.layerEdgeLists[lc]) {
 					int new_other_node = thread_id + other_node.first;
-					our_node.second.push_back(new_other_node);
-					for(int o : originals) layerEdgeLists[lc][new_other_node].push_back(o);
+					layerEdgeLists[lc][our_node.first].push_back(new_other_node);
+					layerEdgeLists[lc][new_other_node].push_back(our_node.first);
 				}
-
-                // if (layerEdgeLists[lc].find(node.first) == layerEdgeLists[lc].end()) {
-                //     // 현재 그래프에 없는 노드이면 추가
-                //     layerEdgeLists[lc][node.first] = node.second;
-                // } else {
-                //     // 이미 존재하는 노드이면 엣지 병합
-                //     vector<int>& edges = layerEdgeLists[lc][node.first];
-                //     edges.insert(edges.end(), node.second.begin(), node.second.end());
-                //     // 중복된 엣지 제거
-                //     sort(edges.begin(), edges.end());
-                //     edges.erase(unique(edges.begin(), edges.end()), edges.end());
-                // }
             }
+			for(auto& our_node : layerEdgeLists[lc]) {
+				vector<pair<double, int>> distPairs;
+				int first_node = our_node.first;
+
+				for(int second_node : our_node.second) distPairs.emplace_back(items[first_node].dist(items[second_node]), second_node);
+				sort(distPairs.begin(), distPairs.end());
+				our_node.second.clear();
+				for (int d = 0; d<min(int(distPairs.size()),30); d++) our_node.second.push_back(distPairs[d].second);
+			}
         }
     }
 
