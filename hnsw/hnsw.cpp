@@ -77,6 +77,8 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	nearestNeighbors.insert(make_pair(td, ep));
 	isVisited.insert(ep);
 
+	int local_ef = ef / omp_get_num_threads() + 2;
+
 	while (!candidates.empty()) {
 		auto ci = candidates.begin(); candidates.erase(candidates.begin());
 		int nid = ci->second;
@@ -84,18 +86,60 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 
 		if (ci->first > fi->first) break;
 		
-		#pragma omp parallel for
-		for (int ed: layerEdgeLists[lc][nid]) {
-			if (isVisited.find(ed) != isVisited.end()) continue;
-			fi = nearestNeighbors.end(); fi--;
-			isVisited.insert(ed);
-			td = q.dist(items[ed]);
-			if ((td < fi->first) || nearestNeighbors.size() < ef) {
-				candidates.insert(make_pair(td, ed));
-				nearestNeighbors.insert(make_pair(td, ed));
-				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+		int layersize = layerEdgeLists[lc][nid].size();
+		double fi_dist = fi->first;
+
+		alignas(64) vector<set<pair<double,int>>> local_cand(40);
+		alignas(64) vector<set<pair<double,int>>> local_nearest(40);
+		alignas(64) vector<unordered_set<int>> local_visit(40);
+
+		#pragma omp parallel firstprivate(fi_dist) num_threads(40)
+		{
+			#pragma omp for
+			for(int j=0; j<layersize; j++) {
+				int ed = layerEdgeLists[lc][nid][j];
+				int id = omp_get_thread_num();
+
+				if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) continue;
+				local_visit[id].insert(ed);
+
+				auto new_fi = local_nearest[id].end();
+				double new_td = q.dist(items[ed]);
+				double threshold = min(fi_dist,local_nearest.size() == 0 ? INT_MAX : (--new_fi)->first);
+				
+				if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
+					local_cand[id].insert(make_pair(td, ed));
+					local_nearest[id].insert(make_pair(td, ed));
+					if(local_nearest[id].size() > local_ef) local_nearest[id].erase(new_fi);
+				}
+			}
+			#pragma omp barrier
+
+			#pragma omp single nowait
+			{
+				for(int i=0; i<40; i++) isVisited.insert(local_visit.begin(),local_visit.end());
+			}
+			#pragma omp single nowait
+			{
+				for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
+			}
+			#pragma omp single nowait
+			{
+				for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
 			}
 		}
+
+		// for(int ed: layerEdgeLists[lc][nid]) {
+		// 	if (isVisited.find(ed) != isVisited.end()) continue;
+		// 	fi = nearestNeighbors.end(); fi--;
+		// 	isVisited.insert(ed);
+		// 	td = q.dist(items[ed]);
+		// 	if ((td < fi->first) || nearestNeighbors.size() < ef) {
+		// 		candidates.insert(make_pair(td, ed));
+		// 		nearestNeighbors.insert(make_pair(td, ed));
+		// 		if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+		// 	}
+		// }
 	}
 	vector<int> results;
 	for(auto &p: nearestNeighbors) results.push_back(p.second);
