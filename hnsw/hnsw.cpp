@@ -132,7 +132,7 @@ void HNSWGraph::Insert(Item& q) {
 	int tn = omp_get_num_threads();
 	#pragma omp parallel num_threads(tn)
 	{
-		#pragma omp single
+		#pragma omp single nowait
 		{
 			for (int i = min(l, maxLyer); i >= 0; i--) {
 				int MM = l == 0 ? MMax0 : MMax;
