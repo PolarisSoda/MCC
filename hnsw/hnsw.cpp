@@ -99,7 +99,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			for(int j=0; j<layersize; j++) {
 				int ed = layerEdgeLists[lc][nid][j];
 				int id = omp_get_thread_num();
-				cout << id << endl;
+
 				if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) continue;
 				local_visit[id].insert(ed);
 
@@ -115,6 +115,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			}
 			#pragma omp barrier
 		}
+		for(int i=0; i<40; i++) cout << local_cand[i].size() << endl;
 		for(int i=0; i<40; i++) isVisited.insert(local_visit[i].begin(),local_visit[i].end());
 		for(int i=0; i<40; i++) candidates.insert(local_cand[i].begin(),local_cand[i].end());
 		for(int i=0; i<40; i++) nearestNeighbors.insert(local_nearest[i].begin(),local_nearest[i].end());
