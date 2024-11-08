@@ -66,87 +66,122 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 	using_thread--;
 }
 
-vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
-    set<pair<double, int>> candidates;
-    set<pair<double, int>> nearestNeighbors;
-    unordered_set<int> isVisited;
+// vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
+//     set<pair<double, int>> candidates;
+//     set<pair<double, int>> nearestNeighbors;
+//     unordered_set<int> isVisited;
 
-    double td = q.dist(items[ep]);
+//     double td = q.dist(items[ep]);
 
-    candidates.insert(make_pair(td, ep));
-    nearestNeighbors.insert(make_pair(td, ep));
-    isVisited.insert(ep);
+//     candidates.insert(make_pair(td, ep));
+//     nearestNeighbors.insert(make_pair(td, ep));
+//     isVisited.insert(ep);
 
-    int local_ef = ef / 4 + 2;
+//     int local_ef = ef / 4 + 2;
 
-    alignas(128) vector<set<pair<double,int>>> local_cand(4);
-    alignas(128) vector<set<pair<double,int>>> local_nearest(4);
-    alignas(128) vector<unordered_set<int>> local_visit(4);
+//     alignas(128) vector<set<pair<double,int>>> local_cand(4);
+//     alignas(128) vector<set<pair<double,int>>> local_nearest(4);
+//     alignas(128) vector<unordered_set<int>> local_visit(4);
 
-    #pragma omp parallel num_threads(4)
-    {
-        #pragma omp single
-        {
-            while (!candidates.empty()) {
-                auto ci = candidates.begin(); candidates.erase(candidates.begin());
-                int nid = ci->second;
-                auto fi = nearestNeighbors.end(); fi--;
+//     #pragma omp parallel num_threads(4)
+//     {
+//         #pragma omp single
+//         {
+//             while (!candidates.empty()) {
+//                 auto ci = candidates.begin(); candidates.erase(candidates.begin());
+//                 int nid = ci->second;
+//                 auto fi = nearestNeighbors.end(); fi--;
 
-                if (ci->first > fi->first) break;
+//                 if (ci->first > fi->first) break;
 
-                int layersize = layerEdgeLists[lc][nid].size();
-                double fi_dist = fi->first;
+//                 int layersize = layerEdgeLists[lc][nid].size();
+//                 double fi_dist = fi->first;
 
-                for(int j = 0; j < layersize; j++) {
-                    int ed = layerEdgeLists[lc][nid][j];
-                    #pragma omp task firstprivate(ed)
-                    {
-                        int id = omp_get_thread_num();
+//                 for(int j = 0; j < layersize; j++) {
+//                     int ed = layerEdgeLists[lc][nid][j];
+//                     #pragma omp task firstprivate(ed)
+//                     {
+//                         int id = omp_get_thread_num();
 
-                        if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) {
+//                         if(isVisited.find(ed) != isVisited.end() || local_visit[id].find(ed) != local_visit[id].end()) {
                             
-                        } else {
-							local_visit[id].insert(ed);
+//                         } else {
+// 							local_visit[id].insert(ed);
 
-							auto new_fi = local_nearest[id].end();
-							double new_td = q.dist(items[ed]);
-							double threshold = min(fi_dist, local_nearest[id].size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
+// 							auto new_fi = local_nearest[id].end();
+// 							double new_td = q.dist(items[ed]);
+// 							double threshold = min(fi_dist, local_nearest[id].size() == 0 ? 0x7FFFFFF : (--new_fi)->first);
 
-							if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
-								local_cand[id].insert(make_pair(new_td, ed));
-								local_nearest[id].insert(make_pair(new_td, ed));
-								if(local_nearest[id].size() > local_ef) local_nearest[id].erase(new_fi);
-							}
-						}
-                    }
-                }
-                #pragma omp taskwait
+// 							if((new_td < threshold) || nearestNeighbors.size() < local_ef) {
+// 								local_cand[id].insert(make_pair(new_td, ed));
+// 								local_nearest[id].insert(make_pair(new_td, ed));
+// 								if(local_nearest[id].size() > local_ef) local_nearest[id].erase(new_fi);
+// 							}
+// 						}
+//                     }
+//                 }
+//                 #pragma omp taskwait
 
-                #pragma omp task
-                {
-                    for(int i = 0; i < 4; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end()), local_visit[i].clear();
-                }
-                #pragma omp task
-                {
-                    for(int i = 0; i < 4; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end()), local_cand[i].clear();
-                }
-                #pragma omp task
-                {
-                    for(int i = 0; i < 4; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end()), local_nearest[i].clear();
-                    while(nearestNeighbors.size() > ef) {
-                        auto temp_fi = nearestNeighbors.end();
-                        temp_fi--;
-                        nearestNeighbors.erase(temp_fi);
-                    }
-                }
-                #pragma omp taskwait
-            }
-        }
-    }
+//                 #pragma omp task
+//                 {
+//                     for(int i = 0; i < 4; i++) isVisited.insert(local_visit[i].begin(), local_visit[i].end()), local_visit[i].clear();
+//                 }
+//                 #pragma omp task
+//                 {
+//                     for(int i = 0; i < 4; i++) candidates.insert(local_cand[i].begin(), local_cand[i].end()), local_cand[i].clear();
+//                 }
+//                 #pragma omp task
+//                 {
+//                     for(int i = 0; i < 4; i++) nearestNeighbors.insert(local_nearest[i].begin(), local_nearest[i].end()), local_nearest[i].clear();
+//                     while(nearestNeighbors.size() > ef) {
+//                         auto temp_fi = nearestNeighbors.end();
+//                         temp_fi--;
+//                         nearestNeighbors.erase(temp_fi);
+//                     }
+//                 }
+//                 #pragma omp taskwait
+//             }
+//         }
+//     }
 
-    vector<int> results;
-    for(auto &p: nearestNeighbors) results.push_back(p.second);
-    return results;
+//     vector<int> results;
+//     for(auto &p: nearestNeighbors) results.push_back(p.second);
+//     return results;
+// }
+
+vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
+	set<pair<double, int>> candidates;
+	set<pair<double, int>> nearestNeighbors;
+	unordered_set<int> isVisited;
+
+	double td = q.dist(items[ep]);
+
+	candidates.insert(make_pair(td, ep));
+	nearestNeighbors.insert(make_pair(td, ep));
+	isVisited.insert(ep);
+
+	while (!candidates.empty()) {
+		auto ci = candidates.begin(); candidates.erase(candidates.begin());
+		int nid = ci->second;
+		auto fi = nearestNeighbors.end(); fi--;
+
+		if (ci->first > fi->first) break;
+
+		for (int ed: layerEdgeLists[lc][nid]) {
+			if (isVisited.find(ed) != isVisited.end()) continue;
+			fi = nearestNeighbors.end(); fi--;
+			isVisited.insert(ed);
+			td = q.dist(items[ed]);
+			if ((td < fi->first) || nearestNeighbors.size() < ef) {
+				candidates.insert(make_pair(td, ed));
+				nearestNeighbors.insert(make_pair(td, ed));
+				if (nearestNeighbors.size() > ef) nearestNeighbors.erase(fi);
+			}
+		}
+	}
+	vector<int> results;
+	for(auto &p: nearestNeighbors) results.push_back(p.second);
+	return results;
 }
 
 vector<int> HNSWGraph::KNNSearch(Item& q, int K) {
