@@ -23,7 +23,7 @@ void HNSWGraph::SearchWorker(int thread_id,vector<set<pair<double,int>>>& local_
 		if (ci->first > fi->first) break;
 
 		for (int ed: layerEdgeLists[lc][nid]) {
-			int atmpt = 5;
+			int atmpt = 2;
 			bool continued = false;
 			while(atmpt) {
 				if(omp_test_lock(&lock_isVisited)) {
@@ -78,8 +78,6 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 	vector<set<pair<double,int>>> local_candidates(thread_cnt);
 	vector<set<pair<double,int>>> local_nearestNeighbors(thread_cnt);
 	
-	#pragma omp parallel num_threads(thread_cnt)
-	{
 		#pragma omp single nowait 
 		{	
 			using_thread++;
@@ -91,8 +89,7 @@ vector<int> HNSWGraph::searchLayer(Item& q, int ep, int ef, int lc) {
 			SearchWorker(thread_id,local_candidates,local_nearestNeighbors,isVisited,lock_isVisited,lc,local_ef,q);
 			using_thread--;
 		}
-	}
-
+	#pragma omp barrier
 	set<pair<double,int>> finals;
 
 	for(const auto& s : local_nearestNeighbors) {
