@@ -274,8 +274,7 @@ void HNSWGraph::merge(HNSWGraph& other,int thread_id) {
 			}
         }
     }
-
-    // 아이템 병합
+	
     items.insert(items.end(), other.items.begin(), other.items.end());
     itemNum += other.itemNum;
 }

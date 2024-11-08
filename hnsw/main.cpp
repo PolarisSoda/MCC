@@ -79,7 +79,8 @@ void randomTest(int numItems, int dim, int numQueries, int K, int numThreads, in
 	HNSWGraph myHNSWGraph(20,30,30,30,4); //We are Able to modify this parameters.
 	myHNSWGraph.layerEdgeLists.clear();
 
-	#pragma omp parallel num_threads(2)
+	numThreads = 2;
+	#pragma omp parallel num_threads(numThreads)
 	{
 		#pragma omp single
 		{
