@@ -6,8 +6,9 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    char tmpStr[30];
+    char tmpStr[31];
     int i, j, N, ret;
+    tmpStr[30] = '\0';
 
     if(argc<3){
 	    cout << "Usage: " << argv[0] << " filename number_of_strings" << endl;
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
     }
 
     int min=65;
-    int max=122;
+    int max=123;
     int strlen_prob=4;
 
     srand( (unsigned) time(0));

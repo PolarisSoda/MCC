@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     }
 
     ret=sscanf(argv[4],"%d", &range);
-    if(ret==EOF || range<0 || (pos+range)>=N){
+    if(ret==EOF || range<0 || (pos+range)>N){
 	    cout << "Invalid range" << endl;
 	    return 0;
     }
