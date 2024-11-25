@@ -99,9 +99,11 @@ int main(int argc, char* argv[]) {
     radix_sort_cuda(strArr,N);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
-    for(int i=pos; i<N && i<(pos+range); i++)
+    for(int i=pos; i<N && i<(pos+range); i++) {
         for(int j=0; j<MAX_LEN; j++) cout << strArr[i][j] << " ";
         cout<< i << ": " << strArr[i] << "\n";
+    }
+        
     cout << "\n";
 
     delete[] strArr;
