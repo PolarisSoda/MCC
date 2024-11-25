@@ -16,6 +16,7 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
     size_t pitch;
 
     if(pitch == MAX_LEN) cout << "HELLO!\n";
+    cout << pitch << " " << MAX_LEN << endl;
 
     cudaMallocPitch(&device_input, &pitch, MAX_LEN, N);
     cudaMemcpy2D((void*)device_input,pitch,(void*)strArr,MAX_LEN,MAX_LEN,N,cudaMemcpyHostToDevice);
