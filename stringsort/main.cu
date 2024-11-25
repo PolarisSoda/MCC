@@ -6,37 +6,58 @@
 using namespace std;
 
 constexpr int MAX_LEN = 32;
+constexpr int CHAR_RANGE = 122 - 64 + 1;
+constexpr int NUM_THREADS = 512;
 //65 ~ 122
 
-__global__ void kernel_function(char* device_input, char* device_output, int N) {
-    int row_idx = blockIdx.x * blockDim.x + threadIdx.x;
+__global__ void kernel_function(char* device_input, char* device_output, int N, int pos) {
+    //N is total amount of string.
+    //we have NUM_THREADS 512
+    //each THREAD HAVE 196 strings.
 
-    if (row_idx < N) {
-        // Each thread works on one row
-        char* row = device_input + row_idx * MAX_LEN;
-        char* sorted_row = device_output + row_idx * MAX_LEN;
+    __shared__ int histogram[NUM_THREADS][CHAR_RANGE];
+    __shared__ int offset[CHAR_RANGE];
 
-        // Perform sorting on this row (simple example of sorting one string)
-        for (int i = 0; i < MAX_LEN; ++i) {
-            for (int j = i + 1; j < MAX_LEN; ++j) {
-                if (row[i] > row[j]) {
-                    char temp = row[i];
-                    row[i] = row[j];
-                    row[j] = temp;
-                }
-            }
-        }
+    int idx = threadIdx.x;
+    int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
 
-        // Copy the sorted row to the output
-        for (int i = 0; i < MAX_LEN; ++i) {
-            sorted_row[i] = row[i];
+    int start_pos = threadIdx.x * 196; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
+
+    int end_pos = min(N,start_pos + workload);
+
+    //out char value is 64 ~ 123, 64 is for null values.
+    for(int i=start_pos; i<end_pos; i++) {
+        char now = device_input[i*MAX_LEN + pos];
+        histogram[idx][now-64]++;
+    }
+    __syncthreads();
+
+
+    if(idx == 0) {
+        offset[0] = 0;
+
+        for(int i=0; i<CHAR_RANGE-1; i++) {
+            int sum = 0;
+            for(int j=0; j<NUM_THREADS; j++) sum += histogram[j][i];
+            offset[i+1] = offset[i] + sum;
         }
     }
+    __syncthreads();
+    
+    for(int i=start_pos; i<end_pos; i++) {
+        char now = device_input[i*MAX_LEN + pos];
+        int after_idx = atomicAdd(&offset[now-64],1);
+
+        device_output[after_idx*MAX_LEN] = device_input[i*MAX_LEN];
+    }
 }
+
+
 void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
 
     // First we have to copy these data to device.
     size_t data_size = N * MAX_LEN * sizeof(char);
+
     char* device_input;
     char* device_output;
 
@@ -45,11 +66,7 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
 
     cudaMemcpy(device_input, strArr, data_size, cudaMemcpyHostToDevice);
 
-    // Now we conduct real radix sort parallel.
-    int threads_per_block = 256;
-    int num_blocks = (N + threads_per_block - 1) / threads_per_block;
-
-    kernel_function<<<num_blocks,threads_per_block>>>(device_input,device_output,N);
+    kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N,MAX_LEN-1);
 
     // and we give output to host.
     cudaMemcpy(strArr,device_output,data_size,cudaMemcpyDeviceToHost);
