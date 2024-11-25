@@ -11,15 +11,6 @@ constexpr int NUM_THREADS = 512;
 //65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, int N, int pos) {
-    //N is total amount of string.
-    //we have NUM_THREADS 512
-    //each THREAD HAVE 196 strings.
-
-    __shared__ int histogram[CHAR_RANGE];
-    __shared__ int offset[CHAR_RANGE];
-    __shared__ int count[CHAR_RANGE];
-
-
     int idx = threadIdx.x;
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
 
@@ -28,14 +19,14 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     int end_pos = min(N,start_pos + workload);
 
     for (int i = start_pos; i < end_pos; i++) {
-        for (int j=0; j <MAX_LEN; j++) {
+        for (int j=0; j<MAX_LEN; j++) {
             device_output[i * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
     }
 }
 
 
-void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
+void radix_sort_cuda(char strArr[][MAX_LEN], int N, char output[][MAX_LEN]) {
 
     // First we have to copy these data to device.
     size_t data_size = N * MAX_LEN * sizeof(char);
@@ -51,7 +42,7 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
     kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N,MAX_LEN-1);
 
     // and we give output to host.
-    cudaMemcpy(strArr,device_output,data_size,cudaMemcpyDeviceToHost);
+    cudaMemcpy(output,device_output,data_size,cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char* argv[]) {
@@ -111,12 +102,12 @@ int main(int argc, char* argv[]) {
     }
 
     // Upper Code is the section that get data.
-    radix_sort_cuda(strArr,N);
+    radix_sort_cuda(strArr,N,outputs);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
     for(int i=pos; i<N && i<(pos+range); i++) {
         cout << i << ": ";
-        for(int j=0; j<MAX_LEN; j++) cout << strArr[i][j];
+        for(int j=0; j<MAX_LEN; j++) cout << outputs[i][j];
         cout << endl;
     }
         
