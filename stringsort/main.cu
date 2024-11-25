@@ -15,6 +15,10 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     //we have NUM_THREADS 512
     //each THREAD HAVE 196 strings.
 
+    __shared__ int histogram[CHAR_RANGE];
+    __shared__ int offset[CHAR_RANGE];
+    __shared__ int count[CHAR_RANGE];
+
     int idx = threadIdx.x;
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
 
@@ -22,7 +26,32 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
 
     int end_pos = min(N,start_pos + workload);
 
+    if (idx < CHAR_RANGE) {
+        histogram[idx] = 0;
+        count[idx] = 0;
+    }
+    __syncthreads();
+
+    //out char value is 64 ~ 123, 64 is for null values.
     for (int i = start_pos; i < end_pos; i++) {
+        char now = device_input[i * MAX_LEN + pos];
+        atomicAdd(&histogram[now-64], 1);
+    }
+    __syncthreads();
+
+
+    if(idx == 0) {
+        offset[0] = 0;
+        for(int i=0; i<CHAR_RANGE-1; i++) {
+            offset[i+1] = offset[i] + histogram[i];
+        }
+    }
+    __syncthreads();
+    
+    for (int i = start_pos; i < end_pos; i++) {
+        char now = device_input[i * MAX_LEN + pos];
+        int index = now - 64;
+        int pos_in_output = offset[index] + atomicAdd(&count[index], 1);
         for (int j = 0; j < MAX_LEN; j++) {
             device_output[i * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
@@ -47,9 +76,6 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     // and we give output to host.
     cudaMemcpy(host_output,device_output,data_size,cudaMemcpyDeviceToHost);
-
-    cudaFree(device_input);
-    cudaFree(device_output);
 }
 
 int main(int argc, char* argv[]) {
@@ -114,6 +140,6 @@ int main(int argc, char* argv[]) {
     cout << "\n";
 
     delete[] strArr;
-    delete[] output;
+
     return 0;
 }
