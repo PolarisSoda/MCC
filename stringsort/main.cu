@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
     memset(strArr, 64, N * MAX_LEN);
     for (int i=0; i<N; i++) {
         inputfile >> std::setw(MAX_LEN) >> &strArr[i * MAX_LEN];
-        cout << strlen((const char *)strArr[i*MAX_LEN]);
+        cout << strlen(&strArr[i*MAX_LEN]);
         cout << endl;
     }
     exit(0);
