@@ -17,6 +17,8 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
 
     __shared__ int histogram[CHAR_RANGE];
     __shared__ int offset[CHAR_RANGE];
+    __shared__ int count[CHAR_RANGE];
+
 
     int idx = threadIdx.x;
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
@@ -38,34 +40,21 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
 
         for(int i=0; i<CHAR_RANGE-1; i++) {
             offset[i+1] = offset[i] + histogram[i];
+            count[i] = 0;
         }
+        count[CHAR_RANGE-1] = 0;
     }
     __syncthreads();
     
     for (int i = start_pos; i < end_pos; i++) {
-    char now = device_input[i * MAX_LEN + pos];
-    int index = now - 64;
-    if (index >= 0 && index < CHAR_RANGE) {
-        int pos_in_output;
-        atomicAdd(&histogram[index], 1); // 히스토그램 업데이트
-        __syncthreads();
-
-        if (idx == 0) {
-            // 오프셋 계산
-            offset[0] = 0;
-            for (int j = 0; j < CHAR_RANGE; j++) {
-                offset[j + 1] = offset[j] + histogram[j];
-            }
-        }
-        __syncthreads();
-
-        pos_in_output = offset[index] + atomicAdd(&histogram[index], -1);
+        char now = device_input[i*MAX_LEN + pos];
+        int index = now - 64;
+        int pos_in_output = offset[index] + atomicAdd(&count[index],1);
         // 문자열 복사
-        for (int j = 0; j < MAX_LEN; j++) {
+        for (int j=0; j <MAX_LEN; j++) {
             device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
     }
-}
 }
 
 
