@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         char temp_arr[MAX_LEN];
         // inputfile>>strArr[i];
         inputfile >> temp_arr;
-        cout << strlen(temp_arr) << endl;
+        if(strlen(temp_arr) >= 30) cout << strlen(temp_arr) << endl;
     }
     inputfile.close();
 
