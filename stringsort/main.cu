@@ -41,7 +41,7 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N, char output[][MAX_LEN]) {
     kernel_function<<<num_blocks,threads_per_block>>>(device_input,device_output,N);
 
     // and we give output to host.
-    cudaMemcpy(output,device_output,data_size,cudaMemcpyHostToDevice);
+    cudaMemcpy(output,device_output,data_size,cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char* argv[]) {
