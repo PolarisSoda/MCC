@@ -53,12 +53,10 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
             }
         }
         __syncthreads();
-
-        if(idx == 0) {
-            char* swap_temp = device_input;
-            device_input = device_output;
-            device_output = swap_temp;
-        }
+        
+        char* swap_temp = device_input;
+        device_input = device_output;
+        device_output = swap_temp;
         __syncthreads();
         
     }
@@ -135,8 +133,7 @@ int main(int argc, char* argv[]) {
         cout << i << ": ";
         for(int j=0; j<MAX_LEN; j++) {
             char now = output[i*MAX_LEN+j];
-            if(now == 0) cout << "WHY???????????\n";
-            if(output[i*MAX_LEN + j] != '@') cout << output[i*MAX_LEN + j];
+            if(now != '@') cout << now;
         }
         cout << endl;
     }
