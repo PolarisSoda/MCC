@@ -10,7 +10,7 @@ constexpr int CHAR_RANGE = 122 - 64 + 1;
 constexpr int NUM_THREADS = 512;
 //65 ~ 122
 
-__global__ void kernel_function(char* device_input, char* device_output, int N, int pos) {
+__global__ void kernel_function(char* device_input, char* device_output, int N) {
     //N is total amount of string.
     //we have NUM_THREADS 512
     //each THREAD HAVE 196 strings.
@@ -19,43 +19,43 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     __shared__ int offset[CHAR_RANGE];
     __shared__ int count[CHAR_RANGE];
 
-    int idx = threadIdx.x;
+    int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
-
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
-
     int end_pos = min(N,start_pos + workload);
 
-    if (idx < CHAR_RANGE) {
-        histogram[idx] = 0;
-        count[idx] = 0;
-    }
-    __syncthreads();
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+        if (idx < CHAR_RANGE) {
+            histogram[idx] = 0;
+            count[idx] = 0;
+        }
+        __syncthreads();
 
+        for (int i=start_pos; i<end_pos; i++) {
+            char now = device_input[i * MAX_LEN + pos];
+            atomicAdd(&histogram[now-64], 1);
+        }
+        __syncthreads();
+
+        if(idx == 0) {
+            offset[0] = 0;
+            for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
+        }
+        __syncthreads();
+
+        for (int i = start_pos; i < end_pos; i++) {
+            char now = device_input[i * MAX_LEN + pos];
+            int index = now - 64;
+            int pos_in_output = offset[index] + atomicAdd(&count[index], 1);
+            for (int j = 0; j < MAX_LEN; j++) {
+                device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
+            }
+        }
+        char* swap_temp = device_input;
+        device_input = device_output;
+        device_output = swap_temp;
+    }
     //out char value is 64 ~ 123, 64 is for null values.
-    for (int i = start_pos; i < end_pos; i++) {
-        char now = device_input[i * MAX_LEN + pos];
-        atomicAdd(&histogram[now-64], 1);
-    }
-    __syncthreads();
-
-
-    if(idx == 0) {
-        offset[0] = 0;
-        for(int i=0; i<CHAR_RANGE-1; i++) {
-            offset[i+1] = offset[i] + histogram[i];
-        }
-    }
-    __syncthreads();
-    
-    for (int i = start_pos; i < end_pos; i++) {
-        char now = device_input[i * MAX_LEN + pos];
-        int index = now - 64;
-        int pos_in_output = offset[index] + atomicAdd(&count[index], 1);
-        for (int j = 0; j < MAX_LEN; j++) {
-            device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
-        }
-    }
 }
 
 
@@ -72,7 +72,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(device_input, host_input, data_size, cudaMemcpyHostToDevice);
 
-    kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N,MAX_LEN-1);
+    kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N);
 
     // and we give output to host.
     cudaMemcpy(host_output,device_output,data_size,cudaMemcpyDeviceToHost);
