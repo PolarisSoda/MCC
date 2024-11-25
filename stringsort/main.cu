@@ -50,10 +50,6 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     __syncthreads();
     
     for (int i = start_pos; i < end_pos; i++) {
-        char now = device_input[i*MAX_LEN + pos];
-        int index = now - 64;
-        int pos_in_output = offset[index] + atomicAdd(&count[index],1);
-        // 문자열 복사
         for (int j=0; j <MAX_LEN; j++) {
             device_output[i * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
