@@ -91,13 +91,24 @@ int main(int argc, char* argv[]) {
     auto outputs = new char[N][MAX_LEN];
     memset(strArr,0,sizeof(strArr));
 
-    for(int i=0; i<N; i++) {
+    for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
-        // inputfile>>strArr[i];
         inputfile >> temp_arr;
-        if(strlen(temp_arr) >= 30) cout << strlen(temp_arr) << endl;
+        int length = strlen(temp_arr);
+
+        memset(strArr[i],0,MAX_LEN);
+        int pos = MAX_LEN - length;
+        memcpy(&strArr[i][pos], temp_arr, length);
     }
     inputfile.close();
+
+    for(int i=0; i<N; i++) {
+        for(int j=0; j<MAX_LEN; j++) {
+            if(strArr[i][j] == 0) cout << 0 << " ";
+            else cout << strArr[i][j] << " ";
+        }
+        cout << endl;
+    }
 
     // Upper Code is the section that get data.
     radix_sort_cuda(strArr,N);
