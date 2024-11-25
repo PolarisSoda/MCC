@@ -1,6 +1,5 @@
-#include <cuda.h>
+#include <cuda_runtime.h>
 #include <stdio.h>
-#include <string.h>
 
 #define MAX_LEN 30
 #define NUM_BUCKETS 256
@@ -47,7 +46,7 @@ void radixSort(char h_input[][MAX_LEN], int n) {
     int blockSize = 256;
     int numBlocks = (n + blockSize - 1) / blockSize;
 
-    for (int exp = 1; exp < NUM_BUCKETS; exp *= NUM_BUCKETS) {
+    for (int exp = 1; exp < MAX_LEN; exp *= NUM_BUCKETS) {
         cudaMemset(d_count, 0, count_size);
         countSortKernel<<<numBlocks, blockSize>>>(d_input, d_output, d_count, exp, n, MAX_LEN);
         cudaDeviceSynchronize();
@@ -68,8 +67,6 @@ void radixSort(char h_input[][MAX_LEN], int n) {
 int main() {
     char h_input[][MAX_LEN] = {"hi", "hello", "you", "this", "is", "for", "ttttt"};
     int n = sizeof(h_input) / MAX_LEN;
-
-    for(int i=0; i<n; i++) printf("First string: %s\n", h_input[i]);
 
     radixSort(h_input, n);
 
