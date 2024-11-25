@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
         inputfile >> temp_arr;
+        cout << temp_arr << endl;
         int length = strlen(temp_arr);
 
         memset(strArr[i],0,MAX_LEN);
@@ -104,8 +105,8 @@ int main(int argc, char* argv[]) {
 
     for(int i=0; i<N; i++) {
         for(int j=0; j<MAX_LEN; j++) {
-            if(strArr[i][j] == 0) cout << 0 << " ";
-            else cout << strArr[i][j] << " ";
+            if(strArr[i][j] == 0) cout << 0;
+            else cout << strArr[i][j];
         }
         cout << endl;
     }
