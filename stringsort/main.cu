@@ -8,8 +8,19 @@ using namespace std;
 constexpr int MAX_LEN = 30;
 
 void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
-    cout << sizeof(strArr) << endl;
 
+    // First we have to copy these data to device.
+    size_t data_size = N * MAX_LEN;
+    char* device_input;
+    char* device_output;
+    size_t pitch;
+
+    if(pitch == MAX_LEN) cout << "HELLO!\n";
+
+    cudaMallocPitch(&device_input, &pitch, MAX_LEN, N);
+    cudaMemcpy2D((void*)device_input,pitch,(void*)strArr,MAX_LEN,MAX_LEN,N,cudaMemcpyHostToDevice);
+
+    cudaMemcpy2D((void*)strArr,MAX_LEN,device_input,pitch,MAX_LEN,N,cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char* argv[]) {
