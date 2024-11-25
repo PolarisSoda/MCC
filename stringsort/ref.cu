@@ -47,7 +47,7 @@ void radixSort(char h_input[][MAX_LEN], int n) {
     int blockSize = 256;
     int numBlocks = (n + blockSize - 1) / blockSize;
 
-    for (int exp = 1; exp < MAX_LEN; exp *= NUM_BUCKETS) {
+    for (int exp = 1; exp < NUM_BUCKETS; exp *= NUM_BUCKETS) {
         cudaMemset(d_count, 0, count_size);
         countSortKernel<<<numBlocks, blockSize>>>(d_input, d_output, d_count, exp, n, MAX_LEN);
         cudaDeviceSynchronize();
