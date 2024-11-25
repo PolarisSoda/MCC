@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
     for(int i=pos; i<N && i<(pos+range); i++) {
         cout << i << ": ";
-        for(int j=0; j<MAX_LEN; j++) cout << output[i*MAX_LEN + j];
+        for(int j=0; j<MAX_LEN; j++) if(output[i*MAX_LEN + j] != '@') cout << output[i*MAX_LEN + j];
         cout << endl;
     }
         
