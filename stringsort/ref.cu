@@ -58,6 +58,8 @@ int main() {
     char h_input[][MAX_LEN] = {"hi", "hello", "you", "this", "is", "for", "ttttt"};
     int n = sizeof(h_input) / MAX_LEN;
 
+    for(int i=0; i<n; i++) printf("First string: %s\n", h_input[i]);
+    
     radixSort(h_input, n);
 
     for (int i = 0; i < n; i++) {
