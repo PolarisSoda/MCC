@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         int length = strlen(temp_arr);
         int pos = MAX_LEN - length;
 
-        memcpy(&strArr[i*MAX_LEN + pos], temp_arr, length);
+        memcpy(&strArr[i*MAX_LEN], temp_arr, length);
     }
     inputfile.close();
 
