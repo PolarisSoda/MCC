@@ -7,7 +7,8 @@ using namespace std;
 
 constexpr int MAX_LEN = 30;
 
-void radix_sort_cuda(char input[][MAX_LEN]) {
+void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
+    cout << sizeof(strArr) << endl;
 
 }
 
@@ -53,11 +54,8 @@ int main(int argc, char* argv[]) {
     inputfile.close();
 
     // Upper Code is the section that get data.
-
-    for(int i=0; i<10; i++) cout << strArr[i] << endl;
+    radix_sort_cuda(strArr,N);
     exit(0);
-    
-    radix_sort_cuda(strArr);
 
     cout<<"\nStrings (Names) in Alphabetical order from position " << pos << ": " << endl;
     for(i=pos; i<N && i<(pos+range); i++)
