@@ -10,18 +10,16 @@ constexpr int MAX_LEN = 30;
 __global__ void kernel_function(char* device_input, char* device_output, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < N) {
-        // 각 스레드는 자신의 문자열을 처리합니다.
         char* input_str = device_input + idx * MAX_LEN;
         char* output_str = device_output + idx * MAX_LEN;
 
-        // 여기서 문자열을 처리하는 코드를 추가합니다.
-        // 예를 들어, 문자열을 복사하는 간단한 예제:
+        // 문자열을 뒤집고 null 문자를 포함하여 처리
         for (int i = 0; i < MAX_LEN; ++i) {
             output_str[MAX_LEN-1-i] = input_str[i];
         }
+        output_str[MAX_LEN] = '\0'; // null 문자 추가
     }
 }
-
 void radix_sort_cuda(char strArr[][MAX_LEN], int N, char output[][MAX_LEN]) {
 
     // First we have to copy these data to device.
@@ -91,6 +89,7 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < MAX_LEN / 2; j++) {
             swap(outputs[i][j], outputs[i][MAX_LEN-1-j]);
         }
+        outputs[i][MAX_LEN] = '\0'; // null 문자 추가
         int checker = strcmp(strArr[i], outputs[i]);
         if (checker != 0) {
             cout << strArr[i] << " " << outputs[i] << endl;
