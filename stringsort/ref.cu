@@ -35,20 +35,31 @@ void radixSort(char h_input[][MAX_LEN], int n) {
     size_t size = n * MAX_LEN * sizeof(char);
     size_t count_size = NUM_BUCKETS * sizeof(int);
 
+    // 메모리 할당
     cudaMalloc((void**)&d_input, size);
     cudaMalloc((void**)&d_output, size);
     cudaMalloc((void**)&d_count, count_size);
 
+    // 호스트에서 디바이스로 데이터 복사
     cudaMemcpy(d_input, h_input, size, cudaMemcpyHostToDevice);
+
+    // CUDA 커널 호출
+    int blockSize = 256;
+    int numBlocks = (n + blockSize - 1) / blockSize;
 
     for (int exp = 1; exp < MAX_LEN; exp *= NUM_BUCKETS) {
         cudaMemset(d_count, 0, count_size);
-        countSortKernel<<<(n + 255) / 256, 256>>>(d_input, d_output, d_count, exp, n, MAX_LEN);
+        countSortKernel<<<numBlocks, blockSize>>>(d_input, d_output, d_count, exp, n, MAX_LEN);
+        cudaDeviceSynchronize();
+
+        // 결과를 d_input으로 복사
         cudaMemcpy(d_input, d_output, size, cudaMemcpyDeviceToDevice);
     }
 
+    // 결과를 호스트로 복사
     cudaMemcpy(h_input, d_output, size, cudaMemcpyDeviceToHost);
 
+    // 메모리 해제
     cudaFree(d_input);
     cudaFree(d_output);
     cudaFree(d_count);
@@ -59,7 +70,7 @@ int main() {
     int n = sizeof(h_input) / MAX_LEN;
 
     for(int i=0; i<n; i++) printf("First string: %s\n", h_input[i]);
-    
+
     radixSort(h_input, n);
 
     for (int i = 0; i < n; i++) {
