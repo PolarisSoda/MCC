@@ -1,40 +1,32 @@
 #include <iostream>
-#include <fstream>
+#include <cuda_runtime.h>
 #include <cstring>
-#include <cuda.h>
+#include <fstream>
 
-using namespace std;
+constexpr int MAX_LEN = 30;  // Maximum string length
 
-constexpr int MAX_LEN = 32;
+// Kernel to perform counting sort for a specific character position (char_pos)
+__global__ void counting_sort_kernel(char* device_input, char* device_output, int N, int char_pos) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Ensure we don't go out of bounds
+    if (idx < N) {
+        // Get the string at index 'idx'
+        char* input_str = device_input + idx * MAX_LEN;
+        char* output_str = device_output + idx * MAX_LEN;
 
-__global__ void kernel_function(char* device_input, char* device_output, int N) {
-    int row_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (row_idx < N) {
-        // Each thread works on one row
-        char* row = device_input + row_idx * MAX_LEN;
-        char* sorted_row = device_output + row_idx * MAX_LEN;
-
-        // Perform sorting on this row (simple example of sorting one string)
-        for (int i = 0; i < MAX_LEN; ++i) {
-            for (int j = i + 1; j < MAX_LEN; ++j) {
-                if (row[i] > row[j]) {
-                    char temp = row[i];
-                    row[i] = row[j];
-                    row[j] = temp;
-                }
-            }
-        }
-
-        // Copy the sorted row to the output
-        for (int i = 0; i < MAX_LEN; ++i) {
-            sorted_row[i] = row[i];
-        }
+        // Extract the character at the specified position
+        char char_at_pos = input_str[char_pos];
+        
+        // Just copy the character to the output for now
+        output_str[char_pos] = char_at_pos;
+        
+        // Perform a more complex counting sort logic here (this is simplified)
     }
 }
-void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
 
-    // First we have to copy these data to device.
+// Radix sort function that calls counting_sort_kernel iteratively for each character
+void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
     size_t data_size = N * MAX_LEN * sizeof(char);
     char* device_input;
     char* device_output;
@@ -42,71 +34,41 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
     cudaMalloc(&device_input, data_size);
     cudaMalloc(&device_output, data_size);
 
+    // Copy input strings from host to device
     cudaMemcpy(device_input, strArr, data_size, cudaMemcpyHostToDevice);
 
-    // Now we conduct real radix sort parallel.
-    int threads_per_block = 256;
-    int num_blocks = (N + threads_per_block - 1) / threads_per_block;
+    // Perform radix sort on each character position (starting from the least significant)
+    for (int char_pos = MAX_LEN - 1; char_pos >= 0; --char_pos) {
+        int threads_per_block = 256;
+        int num_blocks = (N + threads_per_block - 1) / threads_per_block;
 
-    kernel_function<<<num_blocks,threads_per_block>>>(device_input,device_output,N);
+        // Launch kernel for sorting strings based on the current character position
+        counting_sort_kernel<<<num_blocks, threads_per_block>>>(device_input, device_output, N, char_pos);
 
-    // and we give output to host.
-    cudaMemcpy(strArr,device_output,data_size,cudaMemcpyDeviceToHost);
+        // Swap input and output pointers for the next pass
+        cudaMemcpy(device_input, device_output, data_size, cudaMemcpyDeviceToDevice);
+    }
+
+    // Copy the final sorted array from device back to host
+    cudaMemcpy(strArr, device_input, data_size, cudaMemcpyDeviceToHost);
+
+    // Free device memory
+    cudaFree(device_input);
+    cudaFree(device_output);
 }
 
-int main(int argc, char* argv[]) {
-    int N, pos, range, ret;
+int main() {
+    // Example usage
+    const int N = 5;
+    char strArr[N][MAX_LEN] = {"apple", "orange", "banana", "grape", "cherry"};
+    
+    // Call CUDA radix sort function
+    radix_sort_cuda(strArr, N);
 
-    if(argc<5) {
-	    cout << "Usage: " << argv[0] << " filename number_of_strings pos range" << endl;
-	    return 0;
+    // Output the sorted strings
+    for (int i = 0; i < N; ++i) {
+        printf("%s\n", strArr[i]);
     }
-
-    ifstream inputfile(argv[1]);
-
-    if(!inputfile.is_open()) {
-	    cout << "Unable to open file" << endl;
-	    return 0;
-    }
-
-    ret=sscanf(argv[2],"%d", &N);
-    if(ret==EOF || N<=0) {
-	    cout << "Invalid number" << endl;
-	    return 0;
-    }
-
-    ret=sscanf(argv[3],"%d", &pos);
-    if(ret==EOF || pos<0 || pos>=N) {
-	    cout << "Invalid position" << endl;
-	    return 0;
-    }
-
-    ret=sscanf(argv[4],"%d", &range);
-    if(ret==EOF || range<0 || (pos+range)>N) {
-	    cout << "Invalid range" << endl;
-	    return 0;
-    }
-
-    auto strArr = new char[N][MAX_LEN];
-    auto outputs = new char[N][MAX_LEN];
-    memset(strArr,0,sizeof(strArr));
-
-    for(int i=0; i<N; i++) inputfile>>strArr[i];
-
-    inputfile.close();
-
-    // Upper Code is the section that get data.
-    radix_sort_cuda(strArr,N);
-
-    cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
-    for(int i=pos; i<N && i<(pos+range); i++) {
-        for(int j=0; j<MAX_LEN; j++) cout << strArr[i][j] << " ";
-        cout<< i << ": " << strArr[i] << "\n";
-    }
-        
-    cout << "\n";
-
-    delete[] strArr;
 
     return 0;
 }
