@@ -27,6 +27,12 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
 
     int end_pos = min(N,start_pos + workload);
 
+    if (idx < CHAR_RANGE) {
+        histogram[idx] = 0;
+        count[idx] = 0;
+    }
+    __syncthreads();
+
     //out char value is 64 ~ 123, 64 is for null values.
     for (int i = start_pos; i < end_pos; i++) {
         char now = device_input[i * MAX_LEN + pos];
@@ -34,15 +40,12 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     }
     __syncthreads();
 
-
     if(idx == 0) {
         offset[0] = 0;
 
         for(int i=0; i<CHAR_RANGE-1; i++) {
             offset[i+1] = offset[i] + histogram[i];
-            count[i] = 0;
         }
-        count[CHAR_RANGE-1] = 0;
     }
     __syncthreads();
     
@@ -112,7 +115,6 @@ int main(int argc, char* argv[]) {
 
     auto strArr = new char[N][MAX_LEN];
     auto outputs = new char[N][MAX_LEN];
-    memset(strArr,0,sizeof(strArr));
 
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
