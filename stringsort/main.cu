@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
     auto strArr = new char[N*MAX_LEN];
     auto outputs = new char[N*MAX_LEN];
 
-    memset(strArr,64,sizeof(strArr));
+    memset(strArr,64,N*MAX_LEN);
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
         inputfile >> temp_arr;
