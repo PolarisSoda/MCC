@@ -28,10 +28,7 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     //out char value is 64 ~ 123, 64 is for null values.
     for (int i = start_pos; i < end_pos; i++) {
         char now = device_input[i * MAX_LEN + pos];
-        int index = now - 64;
-        if (index >= 0 && index < CHAR_RANGE) {
-            atomicAdd(&histogram[index], 1);
-        }
+        atomicAdd(&histogram[now-64], 1);
     }
     __syncthreads();
 
@@ -49,7 +46,9 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
         char now = device_input[i*MAX_LEN + pos];
         int after_idx = atomicAdd(&offset[now-64],1);
 
-        device_output[after_idx*MAX_LEN] = device_input[i*MAX_LEN];
+        for (int j = 0; j < MAX_LEN; j++) {
+            device_output[after_idx * MAX_LEN + j] = device_input[i * MAX_LEN + j];
+        }
     }
 }
 
@@ -134,7 +133,12 @@ int main(int argc, char* argv[]) {
     radix_sort_cuda(strArr,N);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
-    for(int i=pos; i<N && i<(pos+range); i++) cout << i << ": " << strArr[i] << "\n";
+    for(int i=pos; i<N && i<(pos+range); i++) {
+        cout << i << ": ";
+        for(int j=0; j<MAX_LEN; j++) cout << strArr[i][j];
+        cout << endl;
+    }
+        
     cout << "\n";
 
     delete[] strArr;
