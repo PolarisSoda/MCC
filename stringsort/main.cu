@@ -42,14 +42,30 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     }
     __syncthreads();
     
-    for(int i=start_pos; i<end_pos; i++) {
-        char now = device_input[i*MAX_LEN + pos];
-        int after_idx = atomicAdd(&offset[now-64],1);
+    for (int i = start_pos; i < end_pos; i++) {
+    char now = device_input[i * MAX_LEN + pos];
+    int index = now - 64;
+    if (index >= 0 && index < CHAR_RANGE) {
+        int pos_in_output;
+        atomicAdd(&histogram[index], 1); // 히스토그램 업데이트
+        __syncthreads();
 
+        if (idx == 0) {
+            // 오프셋 계산
+            offset[0] = 0;
+            for (int j = 0; j < CHAR_RANGE; j++) {
+                offset[j + 1] = offset[j] + histogram[j];
+            }
+        }
+        __syncthreads();
+
+        pos_in_output = offset[index] + atomicAdd(&histogram[index], -1);
+        // 문자열 복사
         for (int j = 0; j < MAX_LEN; j++) {
-            device_output[after_idx * MAX_LEN + j] = device_input[i * MAX_LEN + j];
+            device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
     }
+}
 }
 
 
