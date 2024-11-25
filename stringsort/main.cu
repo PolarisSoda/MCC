@@ -116,10 +116,10 @@ int main(int argc, char* argv[]) {
     memset(strArr,64,N*MAX_LEN);
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
-        inputfile >> temp_arr;
+        inputfile >> strArr[i*MAX_LEN];
 
-        int length = strlen(temp_arr);
-        memcpy(&strArr[i*MAX_LEN], temp_arr, length);
+        int length = strArr[i*MAX_LEN];
+        cout << length << endl;
     }
     inputfile.close();
 
