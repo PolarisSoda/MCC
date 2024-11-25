@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cstring>
 #include <cuda.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -118,15 +119,15 @@ int main(int argc, char* argv[]) {
     auto strArr = new char[N*MAX_LEN];
     auto output = new char[N*MAX_LEN];
 
-    memset(strArr,64,N*MAX_LEN);
-    for(int i = 0; i < N; i++) {
-        char temp_arr[MAX_LEN];
-        inputfile >> temp_arr;
-
-        int length = strlen(temp_arr);
-        memcpy(&strArr[i*MAX_LEN], temp_arr, length);
+    memset(strArr, 64, N * MAX_LEN);
+    for (int i=0; i<N; i++) {
+        inputfile >> std::setw(MAX_LEN) >> &strArr[i * MAX_LEN];
+        for(int j=0; j<MAX_LEN; j++) cout << output[i*MAX_LEN + j];
+        cout << endl;
     }
+    exit(0);
     inputfile.close();
+
 
 
     // Upper Code is the section that get data.
