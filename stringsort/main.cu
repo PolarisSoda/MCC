@@ -15,7 +15,7 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     //we have NUM_THREADS 512
     //each THREAD HAVE 196 strings.
 
-    __shared__ int histogram[NUM_THREADS][CHAR_RANGE];
+    __shared__ int histogram[CHAR_RANGE];
     __shared__ int offset[CHAR_RANGE];
 
     int idx = threadIdx.x;
@@ -26,9 +26,12 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     int end_pos = min(N,start_pos + workload);
 
     //out char value is 64 ~ 123, 64 is for null values.
-    for(int i=start_pos; i<end_pos; i++) {
-        char now = device_input[i*MAX_LEN + pos];
-        histogram[idx][now-64]++;
+    for (int i = start_pos; i < end_pos; i++) {
+        char now = device_input[i * MAX_LEN + pos];
+        int index = now - 64;
+        if (index >= 0 && index < CHAR_RANGE) {
+            atomicAdd(&histogram[index], 1);
+        }
     }
     __syncthreads();
 
