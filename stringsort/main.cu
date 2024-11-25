@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     for(int i=0; i<N; i++) {
         for(int j=0; j<MAX_LEN; j++) {
             if(strArr[i][j] == 0) cout << 0;
-            else cout << strArr[i][j];
+            else cout << strArr[i*MAX_LEN + j];
         }
         cout << endl;
     }
