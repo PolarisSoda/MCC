@@ -126,14 +126,18 @@ int main(int argc, char* argv[]) {
         strArr[i*MAX_LEN + length] = 64;
     }
     inputfile.close();
-    
+
     // Upper Code is the section that get data.
     radix_sort_cuda(strArr,output,N);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
     for(int i=pos; i<N && i<(pos+range); i++) {
         cout << i << ": ";
-        for(int j=0; j<MAX_LEN; j++) if(output[i*MAX_LEN + j] != '@') cout << output[i*MAX_LEN + j];
+        for(int j=0; j<MAX_LEN; j++) {
+            char now = output[i*MAX_LEN+j];
+            if(now == 0) cout << "WHY???????????\n";
+            if(output[i*MAX_LEN + j] != '@') cout << output[i*MAX_LEN + j];
+        }
         cout << endl;
     }
         
