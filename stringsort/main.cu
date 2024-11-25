@@ -11,6 +11,14 @@ constexpr int NUM_THREADS = 512;
 //65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, int N, int pos) {
+    //N is total amount of string.
+    //we have NUM_THREADS 512
+    //each THREAD HAVE 196 strings.
+
+    __shared__ int histogram[CHAR_RANGE];
+    __shared__ int offset[CHAR_RANGE];
+    __shared__ int count[CHAR_RANGE];
+
     int idx = threadIdx.x;
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
 
@@ -18,18 +26,43 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
 
     int end_pos = min(N,start_pos + workload);
 
+    if (idx < CHAR_RANGE) {
+        histogram[idx] = 0;
+        count[idx] = 0;
+    }
+    __syncthreads();
+
+    //out char value is 64 ~ 123, 64 is for null values.
     for (int i = start_pos; i < end_pos; i++) {
-        for (int j=0; j<MAX_LEN; j++) {
-            device_output[i * MAX_LEN + j] = device_input[i * MAX_LEN + j];
+        char now = device_input[i * MAX_LEN + pos];
+        atomicAdd(&histogram[now-64], 1);
+    }
+    __syncthreads();
+
+
+    if(idx == 0) {
+        offset[0] = 0;
+        for(int i=0; i<CHAR_RANGE-1; i++) {
+            offset[i+1] = offset[i] + histogram[i];
+        }
+    }
+    __syncthreads();
+    
+    for (int i = start_pos; i < end_pos; i++) {
+        char now = device_input[i * MAX_LEN + pos];
+        int index = now - 64;
+        int pos_in_output = offset[index] + atomicAdd(&count[index], 1);
+        for (int j = 0; j < MAX_LEN; j++) {
+            device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
         }
     }
 }
 
 
-void radix_sort_cuda(char* host_input,char* host_output, int N) {
+void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     // First we have to copy these data to device.
-    size_t data_size = N * MAX_LEN;
+    size_t data_size = N * MAX_LEN * sizeof(char);
 
     char* device_input;
     char* device_output;
@@ -79,7 +112,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto strArr = new char[N*MAX_LEN];
-    auto outputs = new char[N*MAX_LEN];
+    auto output = new char[N*MAX_LEN];
 
     memset(strArr,64,N*MAX_LEN);
     for(int i = 0; i < N; i++) {
@@ -93,18 +126,16 @@ int main(int argc, char* argv[]) {
     }
     inputfile.close();
 
-    radix_sort_cuda(strArr,outputs,N);
-    
-    for(int i=0; i<N; i++) {
-        for(int j=0; j<MAX_LEN; j++) {
-            cout << strArr[i*MAX_LEN + j];
-        }
-        cout << endl;
-    }
 
     // Upper Code is the section that get data.
+    radix_sort_cuda(strArr,output,N);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
+    for(int i=pos; i<N && i<(pos+range); i++) {
+        cout << i << ": ";
+        for(int j=0; j<MAX_LEN; j++) cout << output[i*MAX_LEN + j];
+        cout << endl;
+    }
         
     cout << "\n";
 
