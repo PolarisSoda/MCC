@@ -90,7 +90,9 @@ int main(int argc, char* argv[]) {
     radix_sort_cuda(strArr,N,outputs);
     for(int i=0; i<N; i++) {
         int checker = strcmp(strArr[i],outputs[i]);
-        if(checker != 0) cout << checker << endl;
+        if(checker != 0) {
+            cout << strArr[i] << " " << outputs[i] << endl;
+        }
     }
 
     exit(0);
