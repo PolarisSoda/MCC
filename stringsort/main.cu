@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     radix_sort_cuda(strArr,N,outputs);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
-    for(int i=0; i<N && i<(pos+range); i++) {
+    for(int i=0; i<N; i++) {
         cout << i << ": ";
         for(int j=0; j<MAX_LEN; j++) cout << outputs[i][j];
         cout << endl;
