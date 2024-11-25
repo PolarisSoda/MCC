@@ -40,9 +40,7 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
         offset[0] = 0;
 
         for(int i=0; i<CHAR_RANGE-1; i++) {
-            int sum = 0;
-            for(int j=0; j<NUM_THREADS; j++) sum += histogram[j][i];
-            offset[i+1] = offset[i] + sum;
+            offset[i+1] = offset[i] + histogram[i];
         }
     }
     __syncthreads();
