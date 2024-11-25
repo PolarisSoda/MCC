@@ -75,8 +75,8 @@ int main(int argc, char* argv[]) {
 	    return 0;
     }
 
-    auto strArr = new char[N][30];
-    auto outputs = new char[N][30];
+    auto strArr = new char[N][32];
+    auto outputs = new char[N][32];
     memset(strArr,0,sizeof(strArr));
 
     for(int i=0; i<N; i++) inputfile>>strArr[i];
