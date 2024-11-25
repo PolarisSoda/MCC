@@ -87,10 +87,12 @@ int main(int argc, char* argv[]) {
 
     // Upper Code is the section that get data.
     radix_sort_cuda(strArr,N,outputs);
-    for(int i=0; i<N; i++) {
-        for(int j=0; j<MAX_LEN/2; j++) swap(outputs[i][j], outputs[i][MAX_LEN-1-j]);
-        int checker = strcmp(strArr[i],outputs[i]);
-        if(checker != 0) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < MAX_LEN / 2; j++) {
+            swap(outputs[i][j], outputs[i][MAX_LEN-1-j]);
+        }
+        int checker = strcmp(strArr[i], outputs[i]);
+        if (checker != 0) {
             cout << strArr[i] << " " << outputs[i] << endl;
         }
     }
