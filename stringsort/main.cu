@@ -78,9 +78,10 @@ int main(int argc, char* argv[]) {
 	    return 0;
     }
 
-    auto strArr = new char[N][MAX_LEN];
-    auto outputs = new char[N][MAX_LEN];
+    auto strArr = new char[N*MAX_LEN];
+    auto outputs = new char[N*MAX_LEN];
 
+    memset(strArr,64,sizeof(strArr));
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
         inputfile >> temp_arr;
@@ -88,28 +89,20 @@ int main(int argc, char* argv[]) {
         int length = strlen(temp_arr);
         int pos = MAX_LEN - length;
 
-        memset(strArr[i],64,MAX_LEN);
-        memcpy(&strArr[i][pos], temp_arr, length);
+        memcpy(&strArr[i*MAX_LEN + pos], temp_arr, length);
     }
     inputfile.close();
 
     for(int i=0; i<N; i++) {
         for(int j=0; j<MAX_LEN; j++) {
-            if(strArr[i][j] == 0) cout << 0;
-            else cout << strArr[i*MAX_LEN + j];
+            cout << strArr[i*MAX_LEN + j];
         }
         cout << endl;
     }
 
     // Upper Code is the section that get data.
-    radix_sort_cuda(strArr,N,outputs);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
-    for(int i=0; i<N; i++) {
-        cout << i << ": ";
-        for(int j=0; j<MAX_LEN; j++) cout << outputs[i*MAX_LEN +j];
-        cout << endl;
-    }
         
     cout << "\n";
 
