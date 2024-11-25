@@ -5,7 +5,7 @@
 
 using namespace std;
 
-constexpr int MAX_LEN = 30;
+constexpr int MAX_LEN = 32;
 
 __global__ void kernel_function(char* device_input, char* device_output, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
