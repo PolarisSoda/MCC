@@ -43,12 +43,12 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         }
         __syncthreads();
 
-        for (int i = start_pos; i < end_pos; i++) {
-            char now = device_input[i * MAX_LEN + pos];
-            int index = now - 64;
-            int pos_in_output = offset[index] + atomicAdd(&count[index], 1);
-            for (int j = 0; j < MAX_LEN; j++) {
-                device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
+        for(int i=0; i<N; i++) {
+            char now = device_input[i*MAX_LEN + pos];
+            int index = now-64;
+            if(idx == index) {
+                int after_index = offset[index] + count[index]++;
+                for(int j=0; j<MAX_LEN; j++) device_output[after_index*MAX_LEN + j] = device_input[i*MAX_LEN + j];
             }
         }
         __syncthreads();
