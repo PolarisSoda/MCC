@@ -13,15 +13,12 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N) {
     size_t data_size = N * MAX_LEN;
     char* device_input;
     char* device_output;
-    size_t pitch;
+    size_t input_pitch,output_pitch;
 
-    cudaMallocPitch(&device_input, &pitch, MAX_LEN, N);
+    cudaMallocPitch(&device_input, &input_pitch, MAX_LEN, N);
+    cudaMallocPitch(&device_output, &output_pitch, MAX_LEN, N);
 
-    if(pitch == MAX_LEN) cout << "HELLO!\n";
-    cout << pitch << " " << MAX_LEN << endl;
-    cudaMemcpy2D((void*)device_input,pitch,(void*)strArr,MAX_LEN,MAX_LEN,N,cudaMemcpyHostToDevice);
-
-    cudaMemcpy2D((void*)strArr,MAX_LEN,device_input,pitch,MAX_LEN,N,cudaMemcpyDeviceToHost);
+    cout << input_pitch << " " << output_pitch << endl;
 }
 
 int main(int argc, char* argv[]) {
