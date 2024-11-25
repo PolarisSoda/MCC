@@ -66,7 +66,6 @@ int main(int argc, char* argv[]) {
 
     // Upper Code is the section that get data.
     radix_sort_cuda(strArr,N);
-    exit(0);
 
     cout<<"\nStrings (Names) in Alphabetical order from position " << pos << ": " << endl;
     for(i=pos; i<N && i<(pos+range); i++)
