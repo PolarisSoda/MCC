@@ -124,17 +124,9 @@ int main(int argc, char* argv[]) {
         inputfile >> std::setw(MAX_LEN) >> &strArr[i * MAX_LEN];
         int length = strlen(&strArr[i*MAX_LEN]);
         strArr[i*MAX_LEN + length] = 64;
-        for(int j=0; j<MAX_LEN; j++) {
-            if(strArr[i*MAX_LEN + j] == 0) cout << "HELLO!";
-            else cout << strArr[i*MAX_LEN + j];
-        }
-        cout << endl;
     }
-    exit(0);
     inputfile.close();
-
-
-
+    
     // Upper Code is the section that get data.
     radix_sort_cuda(strArr,output,N);
 
