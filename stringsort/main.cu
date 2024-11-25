@@ -6,6 +6,7 @@
 using namespace std;
 
 constexpr int MAX_LEN = 32;
+//65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, int N) {
     int row_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -94,11 +95,11 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
         inputfile >> temp_arr;
-        cout << temp_arr << endl;
-        int length = strlen(temp_arr);
 
-        memset(strArr[i],0,MAX_LEN);
+        int length = strlen(temp_arr);
         int pos = MAX_LEN - length;
+
+        memset(strArr[i],64,MAX_LEN);
         memcpy(&strArr[i][pos], temp_arr, length);
     }
     inputfile.close();
