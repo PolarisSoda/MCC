@@ -51,9 +51,15 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
                 device_output[pos_in_output * MAX_LEN + j] = device_input[i * MAX_LEN + j];
             }
         }
-        char* swap_temp = device_input;
-        device_input = device_output;
-        device_output = swap_temp;
+        __syncthreads();
+
+        if(idx == 0) {
+            char* swap_temp = device_input;
+            device_input = device_output;
+            device_output = swap_temp;
+        }
+        __syncthreads();
+        
     }
     //out char value is 64 ~ 123, 64 is for null values.
 }
