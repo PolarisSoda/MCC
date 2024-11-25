@@ -17,7 +17,7 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         // 여기서 문자열을 처리하는 코드를 추가합니다.
         // 예를 들어, 문자열을 복사하는 간단한 예제:
         for (int i = 0; i < MAX_LEN; ++i) {
-            output_str[i] = input_str[i];
+            output_str[MAX_LEN-1-i] = input_str[i];
         }
     }
 }
@@ -45,7 +45,6 @@ void radix_sort_cuda(char strArr[][MAX_LEN], int N, char output[][MAX_LEN]) {
 }
 
 int main(int argc, char* argv[]) {
-    char tmpStr[30];
     int N, pos, range, ret;
 
     if(argc<5) {
