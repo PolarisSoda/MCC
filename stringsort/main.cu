@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
         int checker = strcmp(strArr[i], outputs[i]);
         if (checker != 0) {
             cout << strArr[i] << " " << outputs[i] << endl;
+            cout << i << endl;
         }
     }
 
