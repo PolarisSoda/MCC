@@ -72,7 +72,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
         device_input = device_output;
         device_output = swap_temp;
     }
-    
+
     // and we give output to host.
     cudaMemcpy(host_output,device_output,data_size,cudaMemcpyDeviceToHost);
 }
@@ -116,10 +116,10 @@ int main(int argc, char* argv[]) {
     memset(strArr,64,N*MAX_LEN);
     for(int i = 0; i < N; i++) {
         char temp_arr[MAX_LEN];
-        inputfile >> strArr[i*MAX_LEN];
+        inputfile >> temp_arr;
 
-        int length = strArr[i*MAX_LEN];
-        cout << length << endl;
+        int length = strlen(temp_arr);
+        memcpy(&strArr[i*MAX_LEN], temp_arr, length);
     }
     inputfile.close();
 
