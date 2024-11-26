@@ -52,14 +52,9 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         }
         __syncthreads();
 
-        for (int i=start_pos; i<end_pos; i++) {
-            for(int j=0; j<MAX_LEN; j++) {
-                char temp = device_input[i * MAX_LEN + j];
-                device_input[i*MAX_LEN + j] = device_output[i*MAX_LEN + j];
-                device_output[i*MAX_LEN + j] = temp;
-            }
-            
-        }
+        char* swap_temp = devce_input;
+        device_input = device_output;
+        divice_output = swap_temp;
         __syncthreads();
     }
 }
