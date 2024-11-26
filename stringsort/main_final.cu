@@ -8,7 +8,7 @@ using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range
-constexpr int NUM_THREADS = 512; //NUM THREAD
+constexpr int NUM_THREADS = 32; //NUM THREAD
 //65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, int N) {
