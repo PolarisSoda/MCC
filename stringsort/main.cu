@@ -52,9 +52,9 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         }
         __syncthreads();
 
-        char* swap_temp = devce_input;
+        char* swap_temp = device_input;
         device_input = device_output;
-        divice_output = swap_temp;
+        device_output = swap_temp;
         __syncthreads();
     }
 }
