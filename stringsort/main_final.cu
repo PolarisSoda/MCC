@@ -7,9 +7,8 @@
 using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
-constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range
+constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 512; //NUM THREAD
-//65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     //declare shared variable
@@ -29,7 +28,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0, count[idx] = 0;
-        __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
         for(int i=start_pos; i<end_pos; i++) {
@@ -87,6 +85,11 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
+
+    cudaFree(entire_data);
+    cudaFree(output_data);
+    cudaFree(input_index);
+    cudaFree(output_index);
 }
 
 int main(int argc, char* argv[]) {
@@ -137,18 +140,19 @@ int main(int argc, char* argv[]) {
     radix_sort_cuda(strArr,output,N);
 
     cout << "\nStrings (Names) in Alphabetical order from position " << pos << ": " << "\n";
+
     for(int i=pos; i<N && i<(pos+range); i++) {
         cout << i << ": ";
         for(int j=0; j<MAX_LEN; j++) {
             char now = output[i*MAX_LEN+j];
-            if(now != '@') cout << now;
+            if(now == '@') break;
+            cout << now;
         }
         cout << endl;
     }
-        
     cout << "\n";
 
     delete[] strArr;
-
+    delete[] output;
     return 0;
 }
