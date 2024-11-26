@@ -23,7 +23,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int end_pos = min(N,start_pos + workload); //각 스레드가 할 수 있는 최대 양. end_pos - 1 까지.
 
     // We mapped each index to entire_data.
-    for(int i=start_pos; i<=end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
+    for(int i=start_pos; i<end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
     __syncthreads();
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
@@ -55,7 +55,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             }
         }
         __syncthreads();
-        
+
         char** swap_temp = input_index;
         input_index = output_index;
         output_index = swap_temp;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
             if(now == '@') break;
             cout << now;
         }
-        cout << endl;
+        cout << "\n";
     }
     cout << "\n";
 
