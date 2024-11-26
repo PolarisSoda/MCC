@@ -24,7 +24,8 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
     int end_pos = min(N,start_pos + workload); //각 스레드가 할 수 있는 최대 양. end_pos - 1 까지.
-    int pos = 1;
+
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
         
         if (idx < CHAR_RANGE) {
             histogram[idx] = 0;
@@ -54,10 +55,13 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         }
         __syncthreads();
 
+        if(idx == 0) {
             char* swap_temp = device_input;
             device_input = device_output;
             device_output = swap_temp;
+        }
         __syncthreads();
+    }
 }
 
 
