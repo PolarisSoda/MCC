@@ -24,10 +24,12 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     // We mapped each index to entire_data.
     for(int i=start_pos; i<=end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
+    __syncthreads();
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0, count[idx] = 0;
+        __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
         for(int i=start_pos; i<end_pos; i++) {
@@ -52,6 +54,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
                 output_index[after_index] = input_index[i];
             }
         }
+        __syncthreads();
         
         char** swap_temp = input_index;
         input_index = output_index;
