@@ -50,14 +50,9 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
                 for(int j=0; j<MAX_LEN; j++) device_output[after_index*MAX_LEN + j] = device_input[i*MAX_LEN + j];
             }
         }
-        __syncthreads();
-
-        if(idx == 0) {
-            char* swap_temp = device_input;
-            device_input = device_output;
-            device_output = swap_temp;
-        }
-        
+        char* swap_temp = device_input;
+        device_input = device_output;
+        device_output = swap_temp;
         __syncthreads();
     }
 }
