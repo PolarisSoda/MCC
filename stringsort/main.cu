@@ -11,7 +11,7 @@ constexpr int CHAR_RANGE = 122 - 64 + 1;
 constexpr int NUM_THREADS = 512;
 //65 ~ 122
 
-__global__ void kernel_function(char* device_input, char* device_output, int N, int pos) {
+__global__ void kernel_function(char* device_input, char* device_output, int N) {
     //N is total amount of string.
     //we have NUM_THREADS 512
     //each THREAD HAVE 196 strings.
@@ -25,33 +25,44 @@ __global__ void kernel_function(char* device_input, char* device_output, int N, 
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
     int end_pos = min(N,start_pos + workload); //각 스레드가 할 수 있는 최대 양. end_pos - 1 까지.
 
-    if (idx < CHAR_RANGE) {
-        histogram[idx] = 0;
-        count[idx] = 0;
-    }
-    __syncthreads();
-
-    for (int i=start_pos; i<end_pos; i++) {
-        char now = device_input[i*MAX_LEN + pos];
-        atomicAdd(&histogram[now-64], 1);
-    }
-    __syncthreads();
-
-    if(idx == 0) {
-        offset[0] = 0;
-        for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
-    }
-    __syncthreads();
-    
-    for(int i=0; i<N; i++) {
-        char now = device_input[i*MAX_LEN + pos];
-        int index = now-64;
-        if(idx == index) {
-            int after_index = offset[index] + count[index]++;
-            for(int j=0; j<MAX_LEN; j++) device_output[after_index*MAX_LEN + j] = device_input[i*MAX_LEN + j];
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+        
+        if (idx < CHAR_RANGE) {
+            histogram[idx] = 0;
+            count[idx] = 0;
         }
+        __syncthreads();
+
+        for (int i=start_pos; i<end_pos; i++) {
+            char now = device_input[i * MAX_LEN + pos];
+            atomicAdd(&histogram[now-64], 1);
+        }
+        __syncthreads();
+
+        if(idx == 0) {
+            offset[0] = 0;
+            for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
+        }
+        __syncthreads();
+        
+        for(int i=0; i<N; i++) {
+            char now = device_input[i*MAX_LEN + pos];
+            int index = now-64;
+            if(idx == index) {
+                int after_index = offset[index] + count[index]++;
+                for(int j=0; j<MAX_LEN; j++) device_output[after_index*MAX_LEN + j] = device_input[i*MAX_LEN + j];
+            }
+        }
+        __syncthreads();
+
+        if(idx == 0) {
+            char* swap_temp = device_input;
+            device_input = device_output;
+            device_output = swap_temp;
+        }
+        __syncthreads();
+        
     }
-    __syncthreads();
 }
 
 
@@ -67,10 +78,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(device_input, host_input, data_size, cudaMemcpyHostToDevice);
 
-    for(int pos=MAX_LEN-1; pos>=1; pos--) {
-        kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N,pos);
-    }
-    swap(device_input,device_output);
+    kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N);
 
     // and we give output to host.
     cudaMemcpy(host_output,device_output,data_size,cudaMemcpyDeviceToHost);
