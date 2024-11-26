@@ -80,7 +80,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N);
 
     // and we give output to host.
-    cudaMemcpy(host_output,device_output,data_size,cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_output,device_input,data_size,cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char* argv[]) {
