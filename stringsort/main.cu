@@ -67,7 +67,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     kernel_function<<<1,NUM_THREADS>>>(device_toggle,N);
 
     // and we give output to host.
-    cudaMemcpy(host_output,device_toggle[1],data_size,cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_output,device_toggle[0],data_size,cudaMemcpyDeviceToHost);
 }
 
 int main(int argc, char* argv[]) {
