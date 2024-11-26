@@ -67,7 +67,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(device_input, host_input, data_size, cudaMemcpyHostToDevice);
 
-    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+    for(int pos=MAX_LEN-1; pos>=1; pos--) {
         kernel_function<<<1,NUM_THREADS>>>(device_input,device_output,N,pos);
     }
     swap(device_input,device_output);
