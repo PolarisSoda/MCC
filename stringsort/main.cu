@@ -25,7 +25,7 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
     int end_pos = min(N,start_pos + workload); //각 스레드가 할 수 있는 최대 양. end_pos - 1 까지.
 
-    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+    for(int pos=MAX_LEN-1; pos>=-1; pos--) {
         
         if (idx < CHAR_RANGE) {
             histogram[idx] = 0;
