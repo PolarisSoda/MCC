@@ -8,14 +8,13 @@ using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range
-constexpr int NUM_THREADS = 512; //NUM THREAD
+constexpr int NUM_THREADS = 256; //NUM THREAD
 //65 ~ 122
 
 __global__ void kernel_function(char* device_input, char* device_output, int N) {
-
-    __shared__ int histogram[CHAR_RANGE];
-    __shared__ int offset[CHAR_RANGE];
-    __shared__ int count[CHAR_RANGE];
+    __shared__ int histogram[CHAR_RANGE]; //global historam
+    __shared__ int offset[CHAR_RANGE]; //global offset
+    __shared__ int count[CHAR_RANGE]; //global count
 
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
@@ -23,17 +22,20 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
     int end_pos = min(N,start_pos + workload); //각 스레드가 할 수 있는 최대 양. end_pos - 1 까지.
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
-        
+        // INIT global variable
         if (idx < CHAR_RANGE) {
             histogram[idx] = 0;
             count[idx] = 0;
         }
         __syncthreads();
 
+        int local_histogram[CHAR_RANGE] = {0,};
+
         for (int i=start_pos; i<end_pos; i++) {
-            char now = device_input[i * MAX_LEN + pos];
-            atomicAdd(&histogram[now-64], 1);
+            char now = device_input[i*MAX_LEN + pos];
+            local_histogram[now-64]++;
         }
+        for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&histogram[i],local_histogram[i]);
         __syncthreads();
 
         if(idx == 0) {
@@ -44,12 +46,13 @@ __global__ void kernel_function(char* device_input, char* device_output, int N) 
         
         for(int i=0; i<N; i++) {
             char now = device_input[i*MAX_LEN + pos];
-            int index = now-64;
+            int index = now - 64;
             if(idx == index) {
                 int after_index = offset[index] + count[index]++;
                 for(int j=0; j<MAX_LEN; j++) device_output[after_index*MAX_LEN + j] = device_input[i*MAX_LEN + j];
             }
         }
+        
         char* swap_temp = device_input;
         device_input = device_output;
         device_output = swap_temp;
