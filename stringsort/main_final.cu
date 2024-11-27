@@ -73,7 +73,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
             //기본 offset + 앞의 모든 같은 index의 합.
             int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
-            output_index[i] = input_index[i];
+            if(after_index < N) output_index[after_index] = input_index[i];
         }
         __syncthreads();
 
