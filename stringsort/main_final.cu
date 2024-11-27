@@ -42,7 +42,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&histogram[i],local_histogram[i]);
-            atomicAdd(&prefix_offset[idx][i],local_histogram[i]);
+            prefix_offset[idx][i] += local_histogram[i];
         }
         __syncthreads();
 
@@ -61,7 +61,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             //기본 offset + 앞의 모든 같은 index의 합.
-            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
+            int after_index = offset[index] + 0 + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
