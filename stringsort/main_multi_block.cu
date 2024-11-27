@@ -12,6 +12,7 @@ constexpr int NUM_THREADS = 16; //NUM THREAD
 constexpr int NUM_BLOCKS = 64; //NUM BLOCKS
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
+
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int block_count[CHAR_RANGE]; //global count
@@ -23,7 +24,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int thread_start_pos = idx * thread_workload;
     int thread_end_pos = min(N, thread_start_pos+thread_workload);
 
-    int block_workload = (N +blockDim.x-1) / blockDim.x;
+    int block_workload = (N+NUM_BLOCKS-1) / NUM_BLOCKS;
     int block_start_pos = blockIdx.x * block_workload;
     int block_end_pos = min(N, block_start_pos+block_workload);
 
@@ -42,7 +43,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&block_histogram[i],local_histogram[i]);
         __syncthreads();
 
-        if(idx == 0) {
+        if(threadIdx.x == 0) {
             block_offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
         }
