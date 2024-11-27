@@ -38,7 +38,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         int local_histogram[CHAR_RANGE] = {0,};
         for(int i=thread_start_pos; i<thread_end_pos; i++) {
             char now = input_index[i][pos];
-            local_histogram[now-64]++;
+            atomicAdd(&local_histogram[now-64], 1);
         }
         for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&block_histogram[i],local_histogram[i]);
         __syncthreads();
