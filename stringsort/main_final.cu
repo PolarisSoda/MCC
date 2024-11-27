@@ -51,7 +51,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[i][j];
         }
 
-        if(idx == CHAR_RANGE) {
+        if(idx == 0) {
             offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
@@ -66,15 +66,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int after_index = offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
-        // 
-        // for(int i=start_pos; i<end_pos; i++) {
-        //     char now = input_index[i][pos];
-        //     int index = now - 64;
-
-        //     //기본 offset + 앞의 모든 같은 index의 합.
-        //     int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
-        //     output_index[i] = input_index[i];
-        // }
         __syncthreads();
 
         char** swap_temp = input_index;
