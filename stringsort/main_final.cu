@@ -16,9 +16,8 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
-    __shared__ int count[CHAR_RANGE]; //global count
-    //declare local variable
 
+    //declare local variable
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
@@ -31,7 +30,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     // prefix_offset[idx][i]는 idx번째 스레드까지 i문자의 합.
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
-        if(idx < CHAR_RANGE) histogram[idx] = 0, count[idx] = 0;
+        if(idx < CHAR_RANGE) histogram[idx] = 0;
         for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
         __syncthreads();
 
@@ -47,20 +46,23 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         }
         __syncthreads();
 
-        if(idx == 0) {
+        if(idx < CHAR_RANGE) {
+            for(int i=1; i<NUM_THREADS; i++) prefix_offset[idx][i] += prefix_offset[idx][i-1];
+        }
+        if(idx == CHAR_RANGE) {
             offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
         __syncthreads();
 
-        for(int i=0; i<N; i++) {
+        int local_count[CHAR_RANGE] = {0,};
+        for(int i=start_pos; i<end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
 
-            if(idx == index) {
-                int after_index = offset[index] + count[index]++;
-                output_index[after_index] = input_index[i];
-            }
+            //기본 offset + 앞의 모든 같은 index의 합.
+            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
+            output_index[after_index] = input_index[i];
         }
         __syncthreads();
 
