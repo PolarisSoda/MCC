@@ -10,11 +10,12 @@ constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 256; //NUM THREAD
 
-__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int** prefix_offset, int N) {
+__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
     __shared__ int count[CHAR_RANGE]; //global count
+
     //declare local variable
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
@@ -25,11 +26,9 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int i=start_pos; i<end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
     __syncthreads();
 
-    // prefix_offset[idx][i]는 idx번째 스레드까지 i문자의 합.
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0, count[idx] = 0;
-        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
         __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
@@ -37,23 +36,15 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             local_histogram[now-64]++;
         }
-
-        for(int i=0; i<CHAR_RANGE; i++) {
-            atomicAdd(&histogram[i],local_histogram[i]);
-            prefix_offset[idx][i] += local_histogram[i];
-        }
+        for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&histogram[i],local_histogram[i]);
         __syncthreads();
 
-        if(idx < CHAR_RANGE) {
-            for(int i=1; i<NUM_THREADS; i++) prefix_offset[idx][i] += prefix_offset[idx][i-1];
-        }
-        if(idx == CHAR_RANGE) {
+        if(idx == 0) {
             offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
         __syncthreads();
-
-        int local_count[CHAR_RANGE] = {0,};
+        
         for(int i=0; i<N; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
@@ -98,7 +89,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMalloc(&prefix_offset,sizeof(int)*NUM_THREADS*CHAR_RANGE);
 
-    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,prefix_offset,N);
+    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
