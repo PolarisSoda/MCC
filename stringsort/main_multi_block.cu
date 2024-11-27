@@ -54,7 +54,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             if(threadIdx.x == index) {
-                int after_index = block_start_pos + block_offset[index] + block_count[index]++;
+                int after_index =  block_offset[index] + block_count[index]++;
                 output_index[after_index] = input_index[i];
             }
         }
