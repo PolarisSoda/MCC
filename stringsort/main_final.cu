@@ -25,7 +25,10 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int i=start_pos; i<end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
     __syncthreads();
 
-    for(int pos=MAX_LEN-1; pos>=MAX_LEN-1; pos--) {
+
+
+    // prefix_offset[idx][i]는 idx번째 스레드까지 i문자의 합.
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0;
         for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
@@ -36,6 +39,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             local_histogram[now-64]++;
         }
+
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&histogram[i],local_histogram[i]);
             prefix_offset[idx][i] += local_histogram[i];
@@ -159,7 +163,7 @@ int main(int argc, char* argv[]) {
         for(int j=0; j<MAX_LEN; j++) {
             char now = output[i*MAX_LEN+j];
             if(now == '@') break;
-            cout << now;
+            cout << (int)now;
         }
         cout << "\n";
     }
