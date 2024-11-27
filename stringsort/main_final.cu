@@ -10,7 +10,7 @@ constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 256; //NUM THREAD
 
-__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
+__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int** prefix_offset, int N) {
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
@@ -89,7 +89,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMalloc(&prefix_offset,sizeof(int)*NUM_THREADS*CHAR_RANGE);
 
-    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
+    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,prefix_offset,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
