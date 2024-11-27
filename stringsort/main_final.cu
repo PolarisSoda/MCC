@@ -25,7 +25,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int i=start_pos; i<end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
     __syncthreads();
 
-    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+    for(int pos=MAX_LEN-1; pos>=MAX_LEN-1; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0;
         for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
