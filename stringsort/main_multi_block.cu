@@ -58,6 +58,14 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             }
         }
         __syncthreads();
+
+        if (threadIdx.x == 0) {
+        for(int i = block_start_pos; i < block_end_pos; i++) {
+            char* swap_temp = input_index[i];
+            input_index[i] = output_index[i];
+            output_index[i] = swap_temp;
+        }
+    }
         __syncthreads();
     }
 
