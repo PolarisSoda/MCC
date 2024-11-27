@@ -10,13 +10,13 @@ constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 256; //NUM THREAD
 
-
+__device__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
-    __device__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
+
     //declare local variable
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
@@ -73,7 +73,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
             //기본 offset + 앞의 모든 같은 index의 합.
             int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
-            output_index[after_index] = input_index[i];
+            output_index[i] = input_index[i];
         }
         __syncthreads();
 
