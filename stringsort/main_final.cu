@@ -54,13 +54,14 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         __syncthreads();
 
         int local_count[CHAR_RANGE] = {0,};
-        for(int i=start_pos; i<end_pos; i++) {
+        for(int i=0; i<N; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
 
-            //기본 offset + 앞의 모든 같은 index의 합.
-            int after_index = offset[index] + count[index]++;
-            output_index[after_index] = input_index[i];
+            if(idx == index) {
+                int after_index = offset[index] + count[index]++;
+                output_index[after_index] = input_index[i];
+            }
         }
         __syncthreads();
 
