@@ -30,6 +30,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0, count[idx] = 0;
+        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
         __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
