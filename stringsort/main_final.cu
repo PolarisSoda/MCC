@@ -10,7 +10,9 @@ constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 256; //NUM THREAD
 
-__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int** prefix_offset, int N) {
+__device__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
+
+__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
@@ -38,7 +40,11 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             local_histogram[now-64]++;
         }
-        for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&histogram[i],local_histogram[i]);
+
+        for(int i=0; i<CHAR_RANGE; i++) {
+            atomicAdd(&histogram[i],local_histogram[i]);
+            prefix_offset[idx][i] += local_histogram[i];
+        }
         __syncthreads();
 
         if(idx == 0) {
@@ -46,7 +52,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
         __syncthreads();
-        
+
         for(int i=0; i<N; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
@@ -87,11 +93,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     cudaMalloc(&input_index,sizeof(char*)*N);
     cudaMalloc(&output_index,sizeof(char*)*N);
 
-    int** prefix_offset;
-
-    cudaMalloc(&prefix_offset,sizeof(int)*NUM_THREADS*CHAR_RANGE);
-
-    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,prefix_offset,N);
+    kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
