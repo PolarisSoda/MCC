@@ -48,7 +48,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         __syncthreads();
 
         if(idx < CHAR_RANGE) {
-            for(int i=1; i<NUM_THREADS; i++) prefix_offset[idx][i] += prefix_offset[idx][i-1];
+            for(int i=1; i<NUM_THREADS; i++) prefix_offset[idx][i] += prefix_offset[idx-1][i];
         }
         if(idx == CHAR_RANGE) {
             offset[0] = 0;
