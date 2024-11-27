@@ -16,7 +16,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int offset[CHAR_RANGE]; //global offset
     __shared__ int count[CHAR_RANGE]; //global count
     //declare local variable
-    
+
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
     int start_pos = threadIdx.x * workload; // 0: 0~195 1: 196~391 //각 스레드가 시작할 위치.
@@ -48,7 +48,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         if(idx < CHAR_RANGE) {
             for(int i=1; i<NUM_THREADS; i++) prefix_offset[idx][i] += prefix_offset[idx][i-1];
         }
-        if(idx == CHAR_RANGE) {
+        if(idx == 0) {
             offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
