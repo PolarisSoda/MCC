@@ -14,7 +14,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     //declare shared variable
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
-    __shared__ int count[CHAR_RANGE]; //global count
 
     //declare local variable
     int idx = threadIdx.x; // thread's index
@@ -58,7 +57,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             //기본 offset + 앞의 모든 같은 index의 합.
-            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]++);
+            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
