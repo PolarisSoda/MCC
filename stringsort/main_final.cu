@@ -54,7 +54,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         }
         __syncthreads();
 
-        int local_count[CHAR_RANGE] = {0,};
         for(int i=0; i<N; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
