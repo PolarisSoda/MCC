@@ -8,7 +8,7 @@ using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
-constexpr int NUM_THREADS = 256; //NUM THREAD
+constexpr int NUM_THREADS = 2; //NUM THREAD
 
 __device__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
 
@@ -25,7 +25,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     // We mapped each index to entire_data.
     for(int i=start_pos; i<end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
-    __syncthreads();
+    __syncthreads();    
 
     // prefix_offset[idx][i]는 idx번째 스레드까지 i문자의 합.
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
