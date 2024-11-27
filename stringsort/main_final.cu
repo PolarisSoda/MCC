@@ -62,7 +62,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             if(idx == index) {
-                int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
+                int after_index = (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
                 output_index[after_index] = input_index[i];
             }
         }
