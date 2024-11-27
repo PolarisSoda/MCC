@@ -42,26 +42,28 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&histogram[i],local_histogram[i]);
-            atomicAdd(&prefix_offset[idx][i],local_histogram[i]);
-            
+            prefix_offset[idx][i] = local_histogram[i];
         }
         __syncthreads();
 
-        if(idx < CHAR_RANGE) {
-            for(int i=1; i<NUM_THREADS; i++) atomicAdd(&prefix_offset[idx][i],prefix_offset[idx-1][i]);
+        int prefix_count[CHAR_RANGE] = {0,};
+        for(int i=0; i<idx; i++) {
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[i][j];
         }
+
         if(idx == CHAR_RANGE) {
             offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
         __syncthreads();
+
         
         int local_count[CHAR_RANGE] = {0,};
         for(int i=start_pos; i<end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
 
-            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
+            int after_index = offset[index] + prefix_count[index] + local_count[index]++;
             output_index[i] = input_index[i];
         }
         // 
