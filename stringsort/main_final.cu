@@ -15,6 +15,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
     __shared__ int count[CHAR_RANGE]; //global count
+    __shared__ int prefix_offset[NUM_THREADS][CHAR_RANGE]; //global prefix count
 
     //declare local variable
     int idx = threadIdx.x; // thread's index
@@ -44,15 +45,15 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             for(int i=0; i<CHAR_RANGE-1; i++) offset[i+1] = offset[i] + histogram[i];
         }
         __syncthreads();
-        
-        for(int i=0; i<N; i++) {
+
+        int local_count[CHAR_RANGE] = {0,};
+        for(int i=start_pos; i<end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
 
-            if(idx == index) {
-                int after_index = offset[index] + count[index]++;
-                output_index[after_index] = input_index[i];
-            }
+            //기본 offset + 앞의 모든 같은 index의 합.
+            int after_index = offset[index] + 1;
+            output_index[after_index] = input_index[i];
         }
         __syncthreads();
 
