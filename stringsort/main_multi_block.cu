@@ -12,14 +12,6 @@ constexpr int NUM_THREADS = 16; //NUM THREAD
 constexpr int NUM_BLOCKS = 64; //NUM BLOCKS
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
-    // We divided into blocks.
-    // blocks can't communicate each other. it's possible but no syncronize.
-    
-    /*
-    0 ------------------------------------------------------------------------------------------------------ N-1
-    b0            b1            b2            b3            b4            b5           b6           b7          |
-    */
-    //declare shared variable
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int block_count[CHAR_RANGE]; //global count
@@ -39,7 +31,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         //INIT GLOBAL VARIABLE
-        if(threadIdx.x < CHAR_RANGE) block_histogram[idx] = 0, block_count[idx] = 0;
+        if(threadIdx.x < CHAR_RANGE) block_histogram[threadIdx.x] = 0, block_count[threadIdx.x] = 0;
         __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
@@ -71,7 +63,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char* swap_temp = input_index[i];
             input_index[i] = output_index[i];
             output_index[i] = swap_temp;
-            
+
         }
         __syncthreads();
     }
