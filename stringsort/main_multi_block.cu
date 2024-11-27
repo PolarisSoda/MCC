@@ -71,6 +71,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char* swap_temp = input_index[i];
             input_index[i] = output_index[i];
             output_index[i] = swap_temp;
+            
         }
         __syncthreads();
     }
