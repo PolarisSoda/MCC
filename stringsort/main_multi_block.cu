@@ -20,7 +20,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int num_threads = NUM_THREADS * NUM_BLOCKS;
     int thread_workload = (N+num_threads-1) / num_threads;
 
-    int idx = blockIdx.x*NUM_THREADS + threadIdx.x;
+    int idx = blockIdx.x*blockDim.x + threadIdx.x;
     int thread_start_pos = idx * thread_workload;
     int thread_end_pos = min(N, thread_start_pos+thread_workload);
 
