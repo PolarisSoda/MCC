@@ -8,7 +8,7 @@ using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
-constexpr int NUM_THREADS = 16; //NUM THREAD
+constexpr int NUM_THREADS = 32; //NUM THREAD
 constexpr int NUM_BLOCKS = 64; //NUM BLOCKS
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
@@ -59,13 +59,13 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         }
         __syncthreads();
 
-        if (threadIdx.x == 0) {
-        for(int i = block_start_pos; i < block_end_pos; i++) {
-            char* swap_temp = input_index[i];
-            input_index[i] = output_index[i];
-            output_index[i] = swap_temp;
+        if(threadIdx.x == 0) {
+            for(int i=block_start_pos; i<block_end_pos; i++) {
+                char* swap_temp = input_index[i];
+                input_index[i] = output_index[i];
+                output_index[i] = swap_temp;
+            }
         }
-    }
         __syncthreads();
     }
 
