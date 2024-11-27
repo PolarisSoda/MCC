@@ -61,10 +61,8 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
 
-            if(idx == index) {
-                int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
-                output_index[i] = input_index[i];
-            }
+            int after_index = offset[index] + (idx == 0 ? 0 : prefix_offset[idx-1][index]) + local_count[index]++;
+            output_index[i] = input_index[i];
         }
         // 
         // for(int i=start_pos; i<end_pos; i++) {
