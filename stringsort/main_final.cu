@@ -42,7 +42,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&histogram[i],local_histogram[i]);
-            prefix_offset[idx][i] += local_histogram[i];
+            atomicAdd(&prefix_offset[idx][i],local_histogram[i]);
         }
         __syncthreads();
 
@@ -97,7 +97,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     int** prefix_offset;
 
-    cudaMalloc(&prefix_offset,sizeof(int)*CHAR_RANGE*NUM_THREADS);
+    cudaMalloc(&prefix_offset,sizeof(int)*NUM_THREADS*CHAR_RANGE);
 
     kernel_function<<<1,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,prefix_offset,N);
 
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
         for(int j=0; j<MAX_LEN; j++) {
             char now = output[i*MAX_LEN+j];
             if(now == '@') break;
-            cout << (int)now;
+            cout << now;
         }
         cout << "\n";
     }
