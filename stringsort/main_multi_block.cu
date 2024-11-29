@@ -53,11 +53,11 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         // 이거 얼마 안걸린다
         int prefix_count[CHAR_RANGE] = {0,};
-        for(int i=0; i<idx; i++) {
-            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
+        for(int i=0; i<local_idx; i++) { // local_idx로 변경
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j]; // shared memory로 변경
         }
 
-        if(idx == 0) {
+        if(local_idx == 0) { // local_idx로 변경
             block_offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
         }
@@ -68,7 +68,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
 
-            int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             assert(after_index >= block_start_pos && after_index < block_end_pos);
             output_index[after_index] = input_index[i];
         }
