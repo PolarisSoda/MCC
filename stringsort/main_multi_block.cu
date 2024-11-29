@@ -26,7 +26,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
     int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
-    int block_workload = thread_workload * num_threads;
+    int block_workload = thread_workload*NUM_THREADS;
     int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
     int block_end_pos = min(N, block_start_pos + block_start_pos); //block의 작업 끝 위치.
 
