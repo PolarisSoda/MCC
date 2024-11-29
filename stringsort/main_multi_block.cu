@@ -64,16 +64,19 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         __syncthreads();
 
         int local_count[CHAR_RANGE] = {0,};
-        for(int i=thread_start_pos; i<thread_end_pos; i++) {
-            char now = input_index[i][pos];
-            int index = now - 64;
+        if(blockIdx.x == 0) {
+            for(int i=thread_start_pos; i<thread_end_pos; i++) {
+                char now = input_index[i][pos];
+                int index = now - 64;
 
-            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
+                int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
 
-            assert(after_index >= block_start_pos && after_index < block_end_pos);
-            output_index[after_index] = input_index[i];
+                assert(after_index >= block_start_pos && after_index < block_end_pos);
+                output_index[after_index] = input_index[i];
+            }
+            __syncthreads();
         }
-        __syncthreads();
+        
 
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
