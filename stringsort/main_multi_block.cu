@@ -75,6 +75,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int check_index = block_offset[index] + prefix_count[index] + local_count[index]++;
             checker[check_index] = true;
             int after_index = block_start_pos + check_index;
+            assert(after_index <= block_end_pos);
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
