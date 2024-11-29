@@ -69,15 +69,11 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
-            if(blockIdx.x == 0) {
-                printf("idx %d bstart %d boffset %d prefix %d local %d after_index %d limit %d limit %d\n",index, block_start_pos, block_offset[index], prefix_count[index], local_count[index]-1,after_index, block_start_pos, block_end_pos);
-            }
             assert(after_index >= block_start_pos && after_index < block_end_pos);
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
 
-        for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
