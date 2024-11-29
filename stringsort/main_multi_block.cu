@@ -31,7 +31,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
-    for(int pos=MAX_LEN-1; pos>=MAX_LEN-1; pos--) {
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
         for(int i=0; i<CHAR_RANGE; i++) prefix_offset[blockIdx.x][local_idx][i] = 0;
