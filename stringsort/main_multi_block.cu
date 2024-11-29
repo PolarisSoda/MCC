@@ -70,7 +70,6 @@ __global__ void kernel_function(char* device_input, char* device_output,char** t
             int after_index = block_start_pos+block_offset[index] + prefix_count[index] + local_count[index]++;
             toggle_index[input^1][after_index] = toggle_index[input][i];
         }
-        input ^= 1;
         __syncthreads();
         
     }
