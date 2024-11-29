@@ -64,7 +64,10 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         if(local_idx == 0) {
             block_offset[0] = 0;
-            for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
+            for(int i=0; i<CHAR_RANGE-1; i++) {
+                block_offset[i+1] = block_offset[i] + block_histogram[i];
+                printf("Block: %d, CHAR: %c, value: %d\n",blockIdx.x,i,block_offset[i+1]);
+            }
         }
         __syncthreads();
 
