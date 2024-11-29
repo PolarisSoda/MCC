@@ -10,7 +10,7 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 16; //NUM BLOCKS
 
 __constant__ char MAX_INF_STR[] = "~";
 __constant__ char MIN_INF_STR[] = "0";
@@ -81,9 +81,9 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
         }
         __syncthreads();
-
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
+
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
         for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
     }
