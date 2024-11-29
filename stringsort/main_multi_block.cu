@@ -13,7 +13,7 @@ constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
-__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
+__global__ void kernel_function(char* device_input, char* device_output,char*** toggle_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int block_count[CHAR_RANGE]; //global count
@@ -30,8 +30,9 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
     int block_end_pos = min(N, block_start_pos+block_workload); //block의 작업 끝 위치.
 
-    for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
+    for(int i=thread_start_pos; i<thread_end_pos; i++) toggle_index[0][i] = device_input + i*MAX_LEN;
 
+    int input = 0;
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
@@ -40,7 +41,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         int local_histogram[CHAR_RANGE] = {0,};
         for(int i=thread_start_pos; i<thread_end_pos; i++) {
-            char now = input_index[i][pos];
+            char now = toggle_index[input][i][pos];
             local_histogram[now-64]++;
         }
 
@@ -64,17 +65,19 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         int local_count[CHAR_RANGE] = {0,};
         for(int i=thread_start_pos; i<thread_end_pos; i++) {
-            char now = input_index[i][pos];
+            char now = toggle_index[input][i][pos];
             int index = now - 64;
 
             int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
-            output_index[after_index] = input_index[i];
+            toggle_index[input^1][after_index] = toggle_index[input][i];
         }
+        input ^= 1;
         __syncthreads();
+        
     }
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
-        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
+        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = toggle_index[input][i][j];
     }
     __syncthreads();
 }
@@ -90,13 +93,18 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(entire_data,host_input,data_size,cudaMemcpyHostToDevice);
 
+    char*** toggle_index;
+    cudaMalloc(&toggle_index,sizeof(char**)*2);
+    cudaMalloc(&toggle_index,sizeof(char*)*N);
+    cudaMalloc(&toggle_index,sizeof(char*)*N);
+
     char** input_index;
     char** output_index;
 
     cudaMalloc(&input_index,sizeof(char*)*N);
     cudaMalloc(&output_index,sizeof(char*)*N);
 
-    kernel_function<<<NUM_BLOCKS,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
+    kernel_function<<<NUM_BLOCKS,NUM_THREADS>>>(entire_data,output_data,toggle_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
