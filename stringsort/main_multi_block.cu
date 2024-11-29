@@ -3,7 +3,6 @@
 #include <cstring>
 #include <cuda.h>
 #include <iomanip>
-#include <assert.h>
 
 using namespace std;
 
@@ -23,6 +22,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     int idx = blockIdx.x*blockDim.x + threadIdx.x; //block을 합한 총 thread의 idx
     int local_idx = threadIdx.x;
+
     int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
     int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
@@ -67,9 +67,12 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
 
-            int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
+        
+        __syncthreads();
+
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
         __syncthreads();
     }
