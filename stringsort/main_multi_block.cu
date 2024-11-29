@@ -13,6 +13,9 @@ constexpr int NUM_THREADS = 64; //NUM THREAD
 constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
 constexpr int INF = 0x7FFFF;
 
+__constant__ char MAX_INF_STR[] = "~";
+__constant__ char MIN_INF_STR[] = "0";
+
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
@@ -78,8 +81,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 __global__ void kernel_merge(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int start_pos[NUM_BLOCKS];
     __shared__ int end_pos[NUM_BLOCKS];
-    __constant__ char MAX_INF_STR[] = "~";
-    __constant__ char MIN_INF_STR[] = "0";
+    
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
