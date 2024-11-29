@@ -69,7 +69,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
-            if(after_index >= block_end_pos)--;
+            if(after_index >= block_end_pos) after_index--;
             assert(after_index >= block_start_pos && after_index < block_end_pos);
             output_index[after_index] = input_index[i];
         }
