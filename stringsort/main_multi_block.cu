@@ -47,7 +47,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&block_histogram[i],local_histogram[i]);
-            prefix_offset[blockIdx.x][idx][i] = local_histogram[i];
+            prefix_offset[blockIdx.x][local_idx][i] = local_histogram[i];
         }
         __syncthreads();
 
