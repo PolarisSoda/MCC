@@ -32,47 +32,6 @@ __global__ void kernel_function(char* device_input, char* device_output,char** t
     for(int i=thread_start_pos; i<thread_end_pos; i++) toggle_index[0][i] = device_input + i*MAX_LEN;
 
     int input = 0;
-    for(int pos=MAX_LEN-1; pos>=0; pos--) {
-        // INIT global variable
-        if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
-        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[blockIdx.x][local_idx][i] = 0;
-        __syncthreads();
-
-        int local_histogram[CHAR_RANGE] = {0,};
-        for(int i=thread_start_pos; i<thread_end_pos; i++) {
-            char now = toggle_index[input][i][pos];
-            local_histogram[now-64]++;
-        }
-
-        for(int i=0; i<CHAR_RANGE; i++) {
-            atomicAdd(&block_histogram[i],local_histogram[i]);
-            prefix_offset[blockIdx.x][idx][i] = local_histogram[i];
-        }
-        __syncthreads();
-
-        // 이거 얼마 안걸린다
-        int prefix_count[CHAR_RANGE] = {0,};
-        for(int i=0; i<idx; i++) {
-            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
-        }
-
-        if(idx == 0) {
-            block_offset[0] = 0;
-            for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
-        }
-        __syncthreads();
-
-        int local_count[CHAR_RANGE] = {0,};
-        for(int i=thread_start_pos; i<thread_end_pos; i++) {
-            char now = toggle_index[input][i][pos];
-            int index = now - 64;
-
-            int after_index = block_start_pos+block_offset[index] + prefix_count[index] + local_count[index]++;
-            toggle_index[input^1][after_index] = toggle_index[input][i];
-        }
-        __syncthreads();
-        
-    }
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
         for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = toggle_index[input][i][j];
