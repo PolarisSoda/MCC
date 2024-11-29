@@ -53,11 +53,11 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         // 이거 얼마 안걸린다
         int prefix_count[CHAR_RANGE] = {0,};
-        for(int i=0; i<local_idx; i++) { // local_idx로 변경
-            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j]; // shared memory로 변경
+        for(int i=0; i<local_idx; i++) {
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
         }
 
-        if(local_idx == 0) { // local_idx로 변경
+        if(local_idx == 0) {
             block_offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
         }
