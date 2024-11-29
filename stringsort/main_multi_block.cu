@@ -16,7 +16,6 @@ __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
-    __shared__ int block_count[CHAR_RANGE]; //global count
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
@@ -70,8 +69,9 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
-
-        for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
+        for(int i = thread_start_pos; i < thread_end_pos; i++) {
+    atomicExch((unsigned long long int*)&input_index[i], (unsigned long long int)output_index[i]);
+}
         __syncthreads();
     }
 
