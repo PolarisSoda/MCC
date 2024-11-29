@@ -13,7 +13,7 @@ constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
-__global__ void kernel_function(char* device_input, char* device_output,char*** toggle_index, int N) {
+__global__ void kernel_function(char* device_input, char* device_output,char** toggle_index[2], int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
 
@@ -92,8 +92,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(entire_data,host_input,data_size,cudaMemcpyHostToDevice);
 
-    char*** toggle_index;
-    cudaMalloc(&toggle_index,sizeof(char**)*2);
+    char** toggle_index[2];
     cudaMalloc(&toggle_index[0],sizeof(char*)*N);
     cudaMalloc(&toggle_index[1],sizeof(char*)*N);
 
