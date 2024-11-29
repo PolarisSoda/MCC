@@ -64,7 +64,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             block_offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) {
                 block_offset[i+1] = block_offset[i] + block_histogram[i];
-                printf("Block: %d, CHAR: %d, value: %d hist: %d\n",blockIdx.x,i,block_offset[i+1],block_histogram[i]);
+                //printf("Block: %d, CHAR: %d, value: %d hist: %d\n",blockIdx.x,i,block_offset[i+1],block_histogram[i]);
             }
         }
         __syncthreads();
