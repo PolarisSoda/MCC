@@ -9,7 +9,7 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 1; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
@@ -69,9 +69,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
-        for(int i = thread_start_pos; i < thread_end_pos; i++) {
-    atomicExch((unsigned long long int*)&input_index[i], (unsigned long long int)output_index[i]);
-}
+        for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
         __syncthreads();
     }
 
