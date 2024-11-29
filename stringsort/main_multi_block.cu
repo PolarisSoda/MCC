@@ -10,13 +10,13 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 4; //NUM BLOCKS
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
-    __shared__ bool checker[50000];
+    __shared__ bool checker[25000];
 
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
@@ -80,7 +80,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         __syncthreads();
 
         if(local_idx == 0) {
-            for(int i=0; i<50000; i++) if(checker[i] == 0) printf("Missing index at block %d: %d\n",blockIdx.x,i);
+            for(int i=0; i<25000; i++) if(checker[i] == 0) printf("Missing index at block %d: %d\n",blockIdx.x,i);
         }
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
