@@ -76,7 +76,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     }
 }
 
-__global__ void kernel_merge(char* device_input, char* device_output, char** input_index, char** output_index, int N,int cnt) {
+__global__ void kernel_merge(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
 
