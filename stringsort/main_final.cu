@@ -17,9 +17,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int histogram[CHAR_RANGE]; //global historam
     __shared__ int offset[CHAR_RANGE]; //global offset
 
-    __shared__ int local_histogram[NUM_THREADS][CHAR_RANGE];
-    __shared__ int prefix_count[NUM_THREADS][CHAR_RANGE];
-
     //declare local variable
     int idx = threadIdx.x; // thread's index
     int workload = (N + NUM_THREADS - 1) / NUM_THREADS; //각 스레드가 가지는 문자열의 양.
@@ -33,27 +30,25 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(idx < CHAR_RANGE) histogram[idx] = 0;
-        for(int i=0; i<CHAR_RANGE; i++) {
-            local_histogram[idx][i] = 0;
-            prefix_offset[idx][i] = 0;
-            prefix_count[idx][i] = 0;
-        }
+        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[idx][i] = 0;
         __syncthreads();
 
+        int local_histogram[CHAR_RANGE] = {0,};
         for(int i=start_pos; i<end_pos; i++) {
             char now = input_index[i][pos];
-            local_histogram[idx][now-64]++;
+            local_histogram[now-64]++;
         }
 
         for(int i=0; i<CHAR_RANGE; i++) {
-            atomicAdd(&histogram[i],local_histogram[idx][i]);
-            prefix_offset[idx][i] = local_histogram[idx][i];
+            atomicAdd(&histogram[i],local_histogram[i]);
+            prefix_offset[idx][i] = local_histogram[i];
         }
         __syncthreads();
 
         // 이거 얼마 안걸린다
+        int prefix_count[CHAR_RANGE] = {0,};
         for(int i=0; i<idx; i++) {
-            for(int j=0; j<CHAR_RANGE; j++) prefix_count[idx][j] += prefix_offset[i][j];
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[i][j];
         }
 
         if(idx == 0) {
@@ -68,7 +63,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
 
-            int after_index = offset[index] + prefix_count[idx][index] + local_count[index]++;
+            int after_index = offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
