@@ -68,7 +68,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
 
-            int after_index = blockIdx.x == 0 ? 0 : block_start_pos-1 + block_offset[index] + prefix_count[index] + local_count[index]++;
+            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             if(blockIdx.x == 0) printf("after_index %d limit %d limit %d\n",after_index, block_start_pos, block_end_pos);
             assert(after_index >= block_start_pos && after_index < block_end_pos);
             output_index[after_index] = input_index[i];
