@@ -10,16 +10,13 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 128; //NUM BLOCKS
-
-__device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
+constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
+    __shared__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
 
-    if(blockIdx.x > 1) return;
-    
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
 
@@ -38,7 +35,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
-        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[blockIdx.x][local_idx][i] = 0;
+        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[local_idx][i] = 0;
         __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
@@ -49,14 +46,14 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         for(int i=0; i<CHAR_RANGE; i++) {
             atomicAdd(&block_histogram[i],local_histogram[i]);
-            prefix_offset[blockIdx.x][local_idx][i] = local_histogram[i];
+            prefix_offset[local_idx][i] = local_histogram[i];
         }
         __syncthreads();
 
         // 이거 얼마 안걸린다
         int prefix_count[CHAR_RANGE] = {0,};
         for(int i=0; i<local_idx; i++) {
-            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[i][j];
         }
 
         if(local_idx == 0) {
