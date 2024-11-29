@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cuda.h>
 #include <iomanip>
+#include <assert.h>
 
 using namespace std;
 
@@ -20,8 +21,9 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
 
-    int idx = blockIdx.x*NUM_THREADS + threadIdx.x; //block을 합한 총 thread의 idx
+    int idx = blockIdx.x*blockDim.x + threadIdx.x; //block을 합한 총 thread의 idx
     int local_idx = threadIdx.x;
+    assert(idx == local_idx);
     int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
     int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
