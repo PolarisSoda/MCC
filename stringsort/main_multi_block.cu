@@ -10,7 +10,7 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 1; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
@@ -23,7 +23,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     int idx = blockIdx.x*blockDim.x + threadIdx.x; //block을 합한 총 thread의 idx
     int local_idx = threadIdx.x;
-    assert(idx == local_idx);
+
     int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
     int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
