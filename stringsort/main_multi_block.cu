@@ -16,8 +16,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
-    __shared__ bool checker[25000];
-
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
@@ -76,7 +74,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             int index = now - 64;
             int check_index = block_offset[index] + prefix_count[index] + local_count[index]++;
-            checker[check_index] = true;
             int after_index = block_start_pos + check_index;
             if(after_index >= thread_end_pos) {
                 //printf("Index error at Block:%d thread:%d boff:%d prf:%d lo:%d bias:%d total:%d\n",blockIdx.x,threadIdx.x,block_offset[index],prefix_count[index],local_count[index]-1,block_start_pos,after_index);
