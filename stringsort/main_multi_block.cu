@@ -110,7 +110,7 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     cudaDeviceSynchronize();
 
     kernel_merge<<<1,NUM_BLOCKS>>>(entire_data,output_data,input_index,output_index,N);
-
+    cudaDeviceSynchronize();
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
