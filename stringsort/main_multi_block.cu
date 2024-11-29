@@ -95,12 +95,6 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
     cudaMalloc(&toggle_index[0],sizeof(char*)*N);
     cudaMalloc(&toggle_index[1],sizeof(char*)*N);
 
-    char** input_index;
-    char** output_index;
-
-    cudaMalloc(&input_index,sizeof(char*)*N);
-    cudaMalloc(&output_index,sizeof(char*)*N);
-
     kernel_function<<<NUM_BLOCKS,NUM_THREADS>>>(entire_data,output_data,toggle_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
