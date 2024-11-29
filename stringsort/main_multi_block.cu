@@ -9,14 +9,13 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
 __global__ void kernel_function(char* device_input, char* device_output,char*** toggle_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
-    __shared__ int block_count[CHAR_RANGE]; //global count
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
