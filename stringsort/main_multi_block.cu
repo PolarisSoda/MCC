@@ -99,7 +99,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
     start_pos[idx] = idx * block_workload;
     end_pos[idx] = min(N, start_pos[idx]+block_workload);
 
-    for(int i=0; i<NUM_BLOCKS; i++) {
+    for(int i=0; i<1; i++) {
         if(i%2 == 0) {
             if(idx % 2 == 0) {
                 int write_cur = start_pos[idx];
