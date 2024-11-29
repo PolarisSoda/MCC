@@ -98,80 +98,8 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
 
     start_pos[idx] = idx * block_workload;
     end_pos[idx] = min(N, start_pos[idx]+block_workload);
-    assert(start_pos[1] == 3136);
-    for(int i=0; i<1; i++) {
-        if(i%2 == 0) {
-            if(idx % 2 == 0) {
-                int left_cur = start_pos[idx];
-                int left_end = end_pos[idx];
-                int right_cur = start_pos[idx+1];
-                int right_end = end_pos[idx+1];
-                int write_cur = start_pos[idx];
 
-                while(left_cur < left_end && right_cur < right_end) {
-                    char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
-                    char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
-                    int diff = device_strncmp(left_str,right_str,32);
-
-                    if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
-                    else output_index[write_cur++] = input_index[left_cur++];
-                }
-            } else {
-                int write_cur = end_pos[idx+1] - 1;
-                int left_cur = end_pos[idx] - 1;
-                int left_end = start_pos[idx] - 1;
-                int right_cur = end_pos[idx+1] - 1;
-                int right_end = start_pos[idx+1] - 1;
-
-                while(left_cur > left_end && right_cur > right_end) {
-                    char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
-                    char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
-                    int diff = device_strncmp(left_str,right_str,32);
-
-                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
-                    else output_index[write_cur--] = input_index[right_cur--];
-                }
-            }
-        } else {
-            if(idx % 2 == 1 && idx != NUM_BLOCKS - 1) {
-                int write_cur = start_pos[idx];
-                int left_cur = start_pos[idx];
-                int left_end = end_pos[idx];
-                int right_cur = start_pos[idx+1];
-                int right_end = end_pos[idx+1];
-
-                while(left_cur < left_end && right_cur < right_end) {
-                    char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
-                    char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
-                    int diff = device_strncmp(left_str,right_str,32);
-
-                    if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
-                    else output_index[write_cur++] = output_index[left_cur++];
-                }
-            } else if(idx % 2 == 0 && idx != 0) {
-                int write_cur = end_pos[idx+1] - 1;
-                int left_cur = end_pos[idx] - 1;
-                int left_end = start_pos[idx] - 1;
-                int right_cur = end_pos[idx+1] - 1;
-                int right_end = start_pos[idx+1] - 1;
-
-                while(left_cur > left_end && right_cur > right_end) {
-                    char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
-                    char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
-                    int diff = device_strncmp(left_str,right_str,32);
-
-                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
-                    else output_index[write_cur--] = output_index[right_cur--];
-                }
-            }
-        }
-        __syncthreads();
-
-        char** swap_temp = input_index;
-        input_index = output_index;
-        output_index = swap_temp;
-        __syncthreads();
-    }
+    
 
     for(int i=start_pos[idx]; i<end_pos[idx]; i++) {
         for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
