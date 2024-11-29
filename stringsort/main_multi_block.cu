@@ -98,11 +98,9 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
 
     start_pos[idx] = idx * block_workload;
     end_pos[idx] = min(N, start_pos[idx]+block_workload);
-
     
-
-    for(int i=start_pos[idx]; i<end_pos[idx]; i++) {
-        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
+    if(idx == 0) {
+        for(int i=0; i<N; i++) for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
     }
 }
 
