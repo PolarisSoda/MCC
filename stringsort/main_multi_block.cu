@@ -69,7 +69,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             int index = now - 64;
 
             int after_index = blockIdx.x == 0 ? 0 : block_start_pos-1 + block_offset[index] + prefix_count[index] + local_count[index]++;
-            printf("Block %d idx %d global_idx %d after_index %d limit %d limit %d\n",blockIdx.x, threadIdx.x, idx, after_index, block_start_pos, block_end_pos);
+            if(blockIdx.x == 0) printf("after_index %d limit %d limit %d\n",after_index, block_start_pos, block_end_pos);
             assert(after_index >= block_start_pos && after_index < block_end_pos);
             output_index[after_index] = input_index[i];
         }
