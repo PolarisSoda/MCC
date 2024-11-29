@@ -114,7 +114,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     int diff = device_strncmp(left_str,right_str,32);
 
                     if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
-                    else output_index[write_cur++] = output_index[left_cur++];
+                    else output_index[write_cur++] = input_index[left_cur++];
                 }
             } else {
                 int write_cur = end_pos[idx+1] - 1;
@@ -129,7 +129,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     int diff = device_strncmp(left_str,right_str,32);
 
                     if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
-                    else output_index[write_cur--] = output_index[right_cur--];
+                    else output_index[write_cur--] = input_index[right_cur--];
                 }
             }
         } else {
