@@ -16,6 +16,8 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int prefix_offset[NUM_THREADS][CHAR_RANGE];
+    __shared__ bool checker[50000];
+
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
@@ -67,18 +69,19 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         __syncthreads();
 
         int local_count[CHAR_RANGE] = {0,};
-        int checker[50000] = {0,};
-        
         for(int i=thread_start_pos; i<thread_end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
-
-            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
-            assert(after_index != block_start_pos);
+            int check_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            checker[check_index] = true;
+            int after_index = block_start_pos + check_index;
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
 
+        if(local_idx == 0) {
+            for(int i=0; i<50000; i++) if(checker[i] == 0) printf("Missing index at block %d: %d\n",blockIdx.x,i);
+        }
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
 
