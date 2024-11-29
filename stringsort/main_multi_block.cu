@@ -25,6 +25,10 @@ __global__ void kernel_function(char* device_input, char* device_output,char*** 
     int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
     int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
+    int block_workload = (N+NUM_BLOCKS-1) / NUM_BLOCKS; //BLOCK이 처리해야하는 arr양.
+    int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
+    int block_end_pos = min(N, block_start_pos+block_workload); //block의 작업 끝 위치.
+
     for(int i=thread_start_pos; i<thread_end_pos; i++) toggle_index[0][i] = device_input + i*MAX_LEN;
 
     int input = 0;
@@ -63,13 +67,18 @@ __global__ void kernel_function(char* device_input, char* device_output,char*** 
             char now = toggle_index[input][i][pos];
             int index = now - 64;
 
-            int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            int after_index = block_start_pos+block_offset[index] + prefix_count[index] + local_count[index]++;
             toggle_index[input^1][after_index] = toggle_index[input][i];
         }
         input ^= 1;
         __syncthreads();
         
     }
+
+    for(int i=thread_start_pos; i<thread_end_pos; i++) {
+        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = toggle_index[input][i][j];
+    }
+    __syncthreads();
 }
 
 void radix_sort_cuda(char* host_input, char* host_output, int N) {
