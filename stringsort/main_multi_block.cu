@@ -32,8 +32,8 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
-    if(local_idx == 0) {
-        printf("Block: %d, start at: %d, end at: %d\n",blockIdx.x,block_start_pos,block_end_pos);
+    if(local_idx == NUM_THREADS-1) {
+        printf("Block: %d, start at: %d, end at: %d\n Actual?: %d",blockIdx.x,block_start_pos,block_end_pos,thread_end_pos);
     }
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
