@@ -12,8 +12,8 @@ constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and
 constexpr int NUM_THREADS = 64; //NUM THREAD
 constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
 
-__constant__ char MAX_INF_STR[] = "~";
-__constant__ char MIN_INF_STR[] = "0";
+__constant__ char MAX_INF_STR[] = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+__constant__ char MIN_INF_STR[] = "00000000000000000000000000000000";
 
 __device__ int device_strncmp(const char* a, const char* b, int n) {
     for(int i = 0; i < n; ++i){
@@ -160,7 +160,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
                     int diff = device_strncmp(left_str,right_str,32);
 
-                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
+                    if(diff > 0) output_index[write_cur--] = input_index[left_cur--];
                     else output_index[write_cur--] = output_index[right_cur--];
                 }
             }
