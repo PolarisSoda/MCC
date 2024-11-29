@@ -101,8 +101,8 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaFree(entire_data);
     cudaFree(output_data);
-    cudaFree(input_index);
-    cudaFree(output_index);
+    cudaFree(toggle_index[0]);
+    cudaFree(toggle_index[1]);
 }
 
 int main(int argc, char* argv[]) {
