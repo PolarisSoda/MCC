@@ -117,11 +117,11 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     else output_index[write_cur++] = input_index[left_cur++];
                 }
             } else {
-                int write_cur = end_pos[idx+1] - 1;
-                int left_cur = end_pos[idx] - 1;
-                int left_end = start_pos[idx] - 1;
-                int right_cur = end_pos[idx+1] - 1;
-                int right_end = start_pos[idx+1] - 1;
+                int write_cur = end_pos[idx] - 1;
+                int left_cur = end_pos[idx-1] - 1;
+                int left_end = start_pos[idx-1] - 1;
+                int right_cur = end_pos[idx] - 1;
+                int right_end = start_pos[idx] - 1;
 
                 while(left_cur > left_end && right_cur > right_end) {
                     char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
@@ -149,11 +149,11 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     else output_index[write_cur++] = output_index[left_cur++];
                 }
             } else if(idx % 2 == 0 && idx != 0) {
-                int write_cur = end_pos[idx+1] - 1;
-                int left_cur = end_pos[idx] - 1;
-                int left_end = start_pos[idx] - 1;
-                int right_cur = end_pos[idx+1] - 1;
-                int right_end = start_pos[idx+1] - 1;
+                int write_cur = end_pos[idx] - 1;
+                int left_cur = end_pos[idx-1] - 1;
+                int left_end = start_pos[idx-1] - 1;
+                int right_cur = end_pos[idx] - 1;
+                int right_end = start_pos[idx] - 1;
 
                 while(left_cur > left_end && right_cur > right_end) {
                     char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
