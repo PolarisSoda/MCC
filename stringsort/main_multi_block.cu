@@ -9,13 +9,14 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
 
 __device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
-__global__ void kernel_function(char* device_input, char* device_output,char** toggle_index[2], int N) {
+__global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
+    __shared__ int block_count[CHAR_RANGE]; //global count
 
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
@@ -29,12 +30,51 @@ __global__ void kernel_function(char* device_input, char* device_output,char** t
     int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
     int block_end_pos = min(N, block_start_pos+block_workload); //block의 작업 끝 위치.
 
-    for(int i=thread_start_pos; i<thread_end_pos; i++) toggle_index[0][i] = device_input + i*MAX_LEN;
+    for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
-    int input = 0;
+    for(int pos=MAX_LEN-1; pos>=0; pos--) {
+        // INIT global variable
+        if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
+        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[blockIdx.x][local_idx][i] = 0;
+        __syncthreads();
+
+        int local_histogram[CHAR_RANGE] = {0,};
+        for(int i=thread_start_pos; i<thread_end_pos; i++) {
+            char now = input_index[i][pos];
+            local_histogram[now-64]++;
+        }
+
+        for(int i=0; i<CHAR_RANGE; i++) {
+            atomicAdd(&block_histogram[i],local_histogram[i]);
+            prefix_offset[blockIdx.x][idx][i] = local_histogram[i];
+        }
+        __syncthreads();
+
+        // 이거 얼마 안걸린다
+        int prefix_count[CHAR_RANGE] = {0,};
+        for(int i=0; i<idx; i++) {
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
+        }
+
+        if(idx == 0) {
+            block_offset[0] = 0;
+            for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
+        }
+        __syncthreads();
+
+        int local_count[CHAR_RANGE] = {0,};
+        for(int i=thread_start_pos; i<thread_end_pos; i++) {
+            char now = input_index[i][pos];
+            int index = now - 64;
+
+            int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            output_index[after_index] = input_index[i];
+        }
+        __syncthreads();
+    }
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
-        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = toggle_index[input][i][j];
+        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
     }
     __syncthreads();
 }
@@ -50,18 +90,20 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     cudaMemcpy(entire_data,host_input,data_size,cudaMemcpyHostToDevice);
 
-    char** toggle_index[2];
-    cudaMalloc(&toggle_index[0],sizeof(char*)*N);
-    cudaMalloc(&toggle_index[1],sizeof(char*)*N);
+    char** input_index;
+    char** output_index;
 
-    kernel_function<<<NUM_BLOCKS,NUM_THREADS>>>(entire_data,output_data,toggle_index,N);
+    cudaMalloc(&input_index,sizeof(char*)*N);
+    cudaMalloc(&output_index,sizeof(char*)*N);
+
+    kernel_function<<<NUM_BLOCKS,NUM_THREADS>>>(entire_data,output_data,input_index,output_index,N);
 
     cudaMemcpy(host_output,output_data,data_size,cudaMemcpyDeviceToHost);
 
     cudaFree(entire_data);
     cudaFree(output_data);
-    cudaFree(toggle_index[0]);
-    cudaFree(toggle_index[1]);
+    cudaFree(input_index);
+    cudaFree(output_index);
 }
 
 int main(int argc, char* argv[]) {
