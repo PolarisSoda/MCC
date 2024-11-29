@@ -31,6 +31,10 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
     int block_end_pos = min(N, block_start_pos+block_workload); //block의 작업 끝 위치.
 
+    if (local_idx == 0) {
+        printf("Block %d: start_pos = %d, end_pos = %d\n", blockIdx.x, block_start_pos, block_end_pos);
+    }
+    
     for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
