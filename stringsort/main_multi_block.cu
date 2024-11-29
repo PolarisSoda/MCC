@@ -86,7 +86,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
     int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
     int block_end_pos = min(N, block_start_pos + block_workload); //block의 작업 끝 위치.
 
-    if(idx == 0) assert(block_end_pos == 3136);
+    if(idx == 0) assert(block_end_pos == 3135);
 }
 
 void radix_sort_cuda(char* host_input, char* host_output, int N) {
