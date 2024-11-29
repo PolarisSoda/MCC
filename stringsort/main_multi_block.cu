@@ -11,6 +11,7 @@ constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
 constexpr int NUM_BLOCKS = 32; //NUM BLOCKS
+constexpr int INF = 0x7FFFF;
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
@@ -75,16 +76,96 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 }
 
 __global__ void kernel_merge(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
+    __shared__ int start_pos[NUM_BLOCKS];
+    __shared__ int end_pos[NUM_BLOCKS];
+    __constant__ char MAX_INF_STR[] = "~";
+    __constant__ char MIN_INF_STR[] = "0";
+
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
-
     int idx = threadIdx.x; //block안에서의 thread.
-
     int block_workload = thread_workload*NUM_THREADS;
-    int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
-    int block_end_pos = min(N, block_start_pos + block_workload); //block의 작업 끝 위치.
 
-    if(idx == 0) printf("%d\n",block_end_pos);
+    start_pos[idx] = idx * block_workload;
+    end_pos[idx] = min(N, start_pos[idx]+block_workload);
+
+    for(int i=0; i<NUM_BLOCKS; i++) {
+        if(i%2 == 0) {
+            if(idx % 2 == 0) {
+                int write_cur = start_pos[idx];
+                int left_cur = start_pos[idx];
+                int left_end = end_pos[idx];
+                int right_cur = start_pos[idx+1];
+                int right_end = end_pos[idx+1];
+
+                while(left_cur < left_end && right_cur < right_end) {
+                    char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
+                    char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
+                    int diff = strncmp(left_str,right_str,32);
+
+                    if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
+                    else output_index[write_cur++] = output_index[left_cur++];
+                }
+            } else {
+                int write_cur = end_pos[idx+1] - 1;
+                int left_cur = end_pos[idx] - 1;
+                int left_end = start_pos[idx] - 1;
+                int right_cur = end_pos[idx+1] - 1;
+                int right_end = start_pos[idx+1] - 1;
+
+                while(left_cur > left_end && right_cur > right_end) {
+                    char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
+                    char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
+                    int diff = strncmp(left_str,right_str,32);
+
+                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
+                    else output_index[write_cur--] = output_index[right_cur--];
+                }
+            }
+        } else {
+            if(idx % 2 == 1 && idx != NUM_BLOCKS - 1) {
+                int write_cur = start_pos[idx];
+                int left_cur = start_pos[idx];
+                int left_end = end_pos[idx];
+                int right_cur = start_pos[idx+1];
+                int right_end = end_pos[idx+1];
+
+                while(left_cur < left_end && right_cur < right_end) {
+                    char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
+                    char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
+                    int diff = strncmp(left_str,right_str,32);
+
+                    if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
+                    else output_index[write_cur++] = output_index[left_cur++];
+                }
+            } else if(idx % 2 == 0 && idx != 0) {
+                int write_cur = end_pos[idx+1] - 1;
+                int left_cur = end_pos[idx] - 1;
+                int left_end = start_pos[idx] - 1;
+                int right_cur = end_pos[idx+1] - 1;
+                int right_end = start_pos[idx+1] - 1;
+
+                while(left_cur > left_end && right_cur > right_end) {
+                    char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
+                    char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
+                    int diff = strncmp(left_str,right_str,32);
+
+                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
+                    else output_index[write_cur--] = output_index[right_cur--];
+                }
+            }
+        }
+        __syncthreads();
+
+        char** swap_temp = input_index;
+        input_index = output_index;
+        output_index = swap_temp;
+        __syncthreads();
+    }
+
+    for(int i=start_pos[idx]; i<end_pos[idx]; i++) {
+        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
+    }
 }
 
 void radix_sort_cuda(char* host_input, char* host_output, int N) {
