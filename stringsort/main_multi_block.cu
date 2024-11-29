@@ -44,10 +44,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
-    if(local_idx == NUM_THREADS-1) {
-        printf("Block: %d, start at: %d, end at: %d Actual?: %d\n",blockIdx.x,block_start_pos,block_end_pos,thread_end_pos);
-    }
-
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
         // INIT global variable
         if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
@@ -74,10 +70,7 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
 
         if(local_idx == 0) {
             block_offset[0] = 0;
-            for(int i=0; i<CHAR_RANGE-1; i++) {
-                block_offset[i+1] = block_offset[i] + block_histogram[i];
-                //printf("Block: %d, CHAR: %d, value: %d hist: %d\n",blockIdx.x,i,block_offset[i+1],block_histogram[i]);
-            }
+            for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
         }
         __syncthreads();
 
@@ -85,22 +78,16 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         for(int i=thread_start_pos; i<thread_end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
-            int check_index = block_offset[index] + prefix_count[index] + local_count[index]++;
-            int after_index = block_start_pos + check_index;
-            if(after_index >= thread_end_pos) {
-                //printf("Index error at Block:%d thread:%d boff:%d prf:%d lo:%d bias:%d total:%d\n",blockIdx.x,threadIdx.x,block_offset[index],prefix_count[index],local_count[index]-1,block_start_pos,after_index);
-            }
+            int after_index = block_start_pos + block_offset[index] + prefix_count[index] + local_count[index]++;
             output_index[after_index] = input_index[i];
         }
         __syncthreads();
-
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) {
         for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = input_index[i][j];
     }
-    __syncthreads();
 }
 
 __global__ void kernel_merge(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
