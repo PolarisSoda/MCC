@@ -70,11 +70,6 @@ __global__ void kernel_function(char* device_input, char* device_output,char*** 
         __syncthreads();
         
     }
-
-    for(int i=thread_start_pos; i<thread_end_pos; i++) {
-        for(int j=0; j<MAX_LEN; j++) device_output[i*MAX_LEN + j] = toggle_index[input][i][j];
-    }
-    __syncthreads();
 }
 
 void radix_sort_cuda(char* host_input, char* host_output, int N) {
