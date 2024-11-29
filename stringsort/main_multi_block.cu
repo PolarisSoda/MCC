@@ -10,7 +10,7 @@ using namespace std;
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
 constexpr int NUM_THREADS = 64; //NUM THREAD
-constexpr int NUM_BLOCKS = 16; //NUM BLOCKS
+constexpr int NUM_BLOCKS = 1; //NUM BLOCKS
 
 __constant__ char MAX_INF_STR[] = "~";
 __constant__ char MIN_INF_STR[] = "0";
