@@ -18,8 +18,8 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
 
-    if(blockIdx.x != 0) return;
-
+    if(blockIdx.x > 1) return;
+    
     int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
     int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
 
