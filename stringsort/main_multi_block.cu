@@ -143,7 +143,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                 while(left_cur < left_end && right_cur < right_end) {
                     char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
                     char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
-                    int diff = strncmp(left_str,right_str,32);
+                    int diff = device_strncmp(left_str,right_str,32);
 
                     if(diff >= 0) output_index[write_cur++] = input_index[right_cur++];
                     else output_index[write_cur++] = output_index[left_cur++];
@@ -158,7 +158,7 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                 while(left_cur > left_end && right_cur > right_end) {
                     char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
                     char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
-                    int diff = strncmp(left_str,right_str,32);
+                    int diff = device_strncmp(left_str,right_str,32);
 
                     if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
                     else output_index[write_cur--] = output_index[right_cur--];
