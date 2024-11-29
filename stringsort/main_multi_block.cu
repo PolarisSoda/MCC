@@ -85,9 +85,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
         }
         __syncthreads();
 
-        if(local_idx == 0) {
-            for(int i=0; i<25000; i++) if(checker[i] == 0) printf("Missing index at block %d: %d\n",blockIdx.x,i);
-        }
         for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
     }
 
