@@ -94,8 +94,8 @@ void radix_sort_cuda(char* host_input, char* host_output, int N) {
 
     char*** toggle_index;
     cudaMalloc(&toggle_index,sizeof(char**)*2);
-    cudaMalloc(&toggle_index,sizeof(char*)*N);
-    cudaMalloc(&toggle_index,sizeof(char*)*N);
+    cudaMalloc(&toggle_index[0],sizeof(char*)*N);
+    cudaMalloc(&toggle_index[1],sizeof(char*)*N);
 
     char** input_index;
     char** output_index;
