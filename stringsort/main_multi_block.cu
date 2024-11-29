@@ -8,31 +8,34 @@ using namespace std;
 
 constexpr int MAX_LEN = 32; //String's Max length.
 constexpr int CHAR_RANGE = 122 - 64 + 1; //String's char range start with 65 and end with 122. 64 is correspond to null and empty space.
-constexpr int NUM_THREADS = 4; //NUM THREAD
-constexpr int NUM_BLOCKS = 64; //NUM BLOCKS
+constexpr int NUM_THREADS = 64; //NUM THREAD
+constexpr int NUM_BLOCKS = 2; //NUM BLOCKS
+
+__device__ int prefix_offset[NUM_BLOCKS][NUM_THREADS][CHAR_RANGE];
 
 __global__ void kernel_function(char* device_input, char* device_output, char** input_index, char** output_index, int N) {
-
     __shared__ int block_histogram[CHAR_RANGE]; //global historam
     __shared__ int block_offset[CHAR_RANGE]; //global offset
     __shared__ int block_count[CHAR_RANGE]; //global count
 
-    int num_threads = NUM_THREADS * NUM_BLOCKS;
-    int thread_workload = (N+num_threads-1) / num_threads;
+    int num_threads = NUM_THREADS * NUM_BLOCKS; //thread의 총 개수.
+    int thread_workload = (N+num_threads-1) / num_threads; // thread마다 할당된 block의 양.
 
-    int idx = blockIdx.x*NUM_THREADS + threadIdx.x;
-    int thread_start_pos = idx * thread_workload;
-    int thread_end_pos = min(N, thread_start_pos+thread_workload);
+    int idx = blockIdx.x*NUM_THREADS + threadIdx.x; //block을 합한 총 thread의 idx
+    int local_idx = threadIdx.x;
+    int thread_start_pos = idx * thread_workload; //총 arr에서 thread의 시작 위치.
+    int thread_end_pos = min(N, thread_start_pos+thread_workload); // thread의 끝 위치.
 
-    int block_workload = (N+NUM_BLOCKS-1) / NUM_BLOCKS;
-    int block_start_pos = blockIdx.x * block_workload;
-    int block_end_pos = min(N, block_start_pos+block_workload);
+    int block_workload = (N+NUM_BLOCKS-1) / NUM_BLOCKS; //BLOCK이 처리해야하는 arr양.
+    int block_start_pos = blockIdx.x * block_workload; //block의 작업 시작 위치
+    int block_end_pos = min(N, block_start_pos+block_workload); //block의 작업 끝 위치.
 
     for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = device_input + i*MAX_LEN;
 
     for(int pos=MAX_LEN-1; pos>=0; pos--) {
-        //INIT GLOBAL VARIABLE
-        if(threadIdx.x < CHAR_RANGE) block_histogram[threadIdx.x] = 0, block_count[threadIdx.x] = 0;
+        // INIT global variable
+        if(local_idx < CHAR_RANGE) block_histogram[local_idx] = 0;
+        for(int i=0; i<CHAR_RANGE; i++) prefix_offset[blockIdx.x][local_idx][i] = 0;
         __syncthreads();
 
         int local_histogram[CHAR_RANGE] = {0,};
@@ -40,32 +43,32 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             char now = input_index[i][pos];
             local_histogram[now-64]++;
         }
-        for(int i=0; i<CHAR_RANGE; i++) atomicAdd(&block_histogram[i],local_histogram[i]);
+
+        for(int i=0; i<CHAR_RANGE; i++) {
+            atomicAdd(&block_histogram[i],local_histogram[i]);
+            prefix_offset[blockIdx.x][idx][i] = local_histogram[i];
+        }
         __syncthreads();
 
-        if(threadIdx.x == 0) {
+        // 이거 얼마 안걸린다
+        int prefix_count[CHAR_RANGE] = {0,};
+        for(int i=0; i<idx; i++) {
+            for(int j=0; j<CHAR_RANGE; j++) prefix_count[j] += prefix_offset[blockIdx.x][i][j];
+        }
+
+        if(idx == 0) {
             block_offset[0] = 0;
             for(int i=0; i<CHAR_RANGE-1; i++) block_offset[i+1] = block_offset[i] + block_histogram[i];
         }
         __syncthreads();
 
-        for(int i=block_start_pos; i<block_end_pos; i++) {
+        int local_count[CHAR_RANGE] = {0,};
+        for(int i=thread_start_pos; i<thread_end_pos; i++) {
             char now = input_index[i][pos];
             int index = now - 64;
 
-            if(threadIdx.x == index) {
-                int after_index = block_start_pos + block_offset[index] + block_count[index]++;
-                output_index[after_index] = input_index[i];
-            }
-        }
-        __syncthreads();
-
-        if(threadIdx.x == 0) {
-            for(int i=block_start_pos; i<block_end_pos; i++) {
-                char* swap_temp = input_index[i];
-                input_index[i] = output_index[i];
-                output_index[i] = swap_temp;
-            }
+            int after_index = block_offset[index] + prefix_count[index] + local_count[index]++;
+            output_index[after_index] = input_index[i];
         }
         __syncthreads();
     }
