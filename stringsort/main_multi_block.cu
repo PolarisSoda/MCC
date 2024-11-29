@@ -71,7 +71,6 @@ __global__ void kernel_function(char* device_input, char* device_output, char** 
             output_index[after_index] = input_index[i];
         }
 
-        for(int i=thread_start_pos; i<thread_end_pos; i++) input_index[i] = output_index[i];
         __syncthreads();
     }
 
