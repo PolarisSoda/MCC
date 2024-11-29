@@ -108,7 +108,6 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                 int right_end = end_pos[idx+1];
                 int write_cur = start_pos[idx];
 
-                printf("%d %d %d %d\n",left_cur,left_end,right_cur,right_end);
                 while(left_cur < left_end && right_cur < right_end) {
                     char* left_str = left_cur == left_end ? MAX_INF_STR : input_index[left_cur];
                     char* right_str = right_cur == right_end ? MAX_INF_STR : input_index[right_cur];
@@ -118,20 +117,6 @@ __global__ void kernel_merge(char* device_input, char* device_output, char** inp
                     else output_index[write_cur++] = input_index[left_cur++];
                 }
             } else {
-                int write_cur = end_pos[idx+1] - 1;
-                int left_cur = end_pos[idx] - 1;
-                int left_end = start_pos[idx] - 1;
-                int right_cur = end_pos[idx+1] - 1;
-                int right_end = start_pos[idx+1] - 1;
-
-                while(left_cur > left_end && right_cur > right_end) {
-                    char* left_str = left_cur == left_end ? MIN_INF_STR : input_index[left_cur];
-                    char* right_str = right_cur == right_end ? MIN_INF_STR : input_index[right_cur];
-                    int diff = device_strncmp(left_str,right_str,32);
-
-                    if(diff >= 0) output_index[write_cur--] = input_index[left_cur--];
-                    else output_index[write_cur--] = input_index[right_cur--];
-                }
             }
         } else {
             if(idx % 2 == 1 && idx != NUM_BLOCKS - 1) {
