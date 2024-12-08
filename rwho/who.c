@@ -53,7 +53,8 @@ char *get_logged_in_users() {
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
+
     char *users = get_logged_in_users();
     if (users) {
         printf("Currently logged-in users:\n%s", users);
