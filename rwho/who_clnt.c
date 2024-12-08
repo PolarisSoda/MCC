@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     result = get_logged_users_1(NULL, client);
     if(result == NULL) {
         clnt_perror(client, argv[1]);
-		return
+		return 1;
     }
 
 	printf("Currently logged-in users:\n%s", *result);
