@@ -39,14 +39,14 @@ int main(int argc, char *argv[]) {
 		return 1;
     }
 
-    result = get_logged_users_1(NULL, clnt);
+    result = get_logged_users_1(NULL, client);
     if(result == NULL) {
-        clnt_perror(clnt, argv[1]);
+        clnt_perror(client, argv[1]);
 		return
     }
 
 	printf("Currently logged-in users:\n%s", *result);
 
-    clnt_destroy(clnt);
+    clnt_destroy(client);
     return 0;
 }
