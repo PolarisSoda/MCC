@@ -16,6 +16,12 @@
 #define SIG_PF void(*)(int)
 #endif
 
+char** get_logged_int_users_1_svc(void *a, struct svc_req *b) {
+	static char* ret = NULL;
+	ret = get_logged_in_users();
+	return &ret;
+}
+
 static void
 who_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
@@ -57,11 +63,7 @@ who_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	return;
 }
 
-char** get_logged_int_users_1_svc(void *a, struct svc_req *b) {
-	static char* ret = NULL;
-	ret = get_logged_in_users();
-	return &ret;
-}
+
 
 
 int
