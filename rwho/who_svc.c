@@ -20,17 +20,18 @@
 char** get_logged_users_1_svc(void *a, struct svc_req *b) {
     struct utmp *entry;
     static const size_t MAX_BUFFER_SIZE = 10000; // Fixed buffer size
-    char *result = NULL;
+    static char *result = NULL;
 
     if(result != NULL) {
         free(result);
         result = NULL;
     }
 	result = (char *)malloc(MAX_BUFFER_SIZE);
-    if (!result) {
+    if(!result) {
         perror("Memory allocation failed");
         return NULL;
     }
+	
     result[0] = '\0'; // Initialize the string
     size_t used_size = 0; // Tracks the current buffer usage
 
