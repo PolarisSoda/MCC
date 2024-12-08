@@ -23,3 +23,38 @@ get_logged_users_1(void *argp, CLIENT *clnt)
 	}
 	return (&clnt_res);
 }
+
+int main(int argc, char *argv[]) {
+    CLIENT *clnt;
+    char **result;
+    char *server;
+
+    if (argc < 2) {
+        fprintf(stderr, "사용법: %s 서버호스트명\n", argv[0]);
+        exit(1);
+    }
+
+    server = argv[1];
+
+    // 클라이언트 핸들 생성
+    clnt = clnt_create(server, WHO_PROG, WHO_VERS, "tcp");
+    if (clnt == NULL) {
+        clnt_pcreateerror(server);
+        exit(1);
+    }
+
+    // 서버의 RPC 함수 호출
+    result = get_logged_int_users_1(NULL, clnt);
+    if (result == NULL) {
+        clnt_perror(clnt, "원격 호출 실패");
+        exit(1);
+    }
+
+    // 결과 출력
+    printf("현재 로그인한 사용자:\n%s", *result);
+
+    // 클라이언트 핸들 해제
+    clnt_destroy(clnt);
+
+    return 0;
+}
