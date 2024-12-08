@@ -11,19 +11,15 @@
 #include <memory.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <utmp.h>
-#include <string.h>
 
 #ifndef SIG_PF
 #define SIG_PF void(*)(int)
 #endif
 
-char *get_logged_in_users() {
+char** get_logged_users_1_svc(void *a, struct svc_req *b) {
     struct utmp *entry;
     static const size_t MAX_BUFFER_SIZE = 1000; // Fixed buffer size
-    char *result = (char *)malloc(MAX_BUFFER_SIZE);
+    static char *result = (char *)malloc(MAX_BUFFER_SIZE);
     if (!result) {
         perror("Memory allocation failed");
         return NULL;
@@ -60,17 +56,11 @@ char *get_logged_in_users() {
     // Close the utmp file
     endutent();
 
-    return result;
-}
-
-char** get_logged_int_users_1_svc(void *a, struct svc_req *b) {
-	static char* ret = NULL;
-	ret = get_logged_in_users();
-	return &ret;
+    return &result;
 }
 
 static void
-who_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
+whoprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
 		int fill;
@@ -84,10 +74,10 @@ who_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		(void) svc_sendreply (transp, (xdrproc_t) xdr_void, (char *)NULL);
 		return;
 
-	case GET_LOGGED_INT_USERS:
+	case GET_LOGGED_USERS:
 		_xdr_argument = (xdrproc_t) xdr_void;
 		_xdr_result = (xdrproc_t) xdr_wrapstring;
-		local = (char *(*)(char *, struct svc_req *)) get_logged_int_users_1_svc;
+		local = (char *(*)(char *, struct svc_req *)) get_logged_users_1_svc;
 		break;
 
 	default:
@@ -110,23 +100,20 @@ who_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	return;
 }
 
-
-
-
 int
 main (int argc, char **argv)
 {
 	register SVCXPRT *transp;
 
-	pmap_unset (WHO_PROG, WHO_VERS);
+	pmap_unset (WHOPROG, WHOVERS);
 
 	transp = svcudp_create(RPC_ANYSOCK);
 	if (transp == NULL) {
 		fprintf (stderr, "%s", "cannot create udp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, WHO_PROG, WHO_VERS, who_prog_1, IPPROTO_UDP)) {
-		fprintf (stderr, "%s", "unable to register (WHO_PROG, WHO_VERS, udp).");
+	if (!svc_register(transp, WHOPROG, WHOVERS, whoprog_1, IPPROTO_UDP)) {
+		fprintf (stderr, "%s", "unable to register (WHOPROG, WHOVERS, udp).");
 		exit(1);
 	}
 
@@ -135,8 +122,8 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "cannot create tcp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, WHO_PROG, WHO_VERS, who_prog_1, IPPROTO_TCP)) {
-		fprintf (stderr, "%s", "unable to register (WHO_PROG, WHO_VERS, tcp).");
+	if (!svc_register(transp, WHOPROG, WHOVERS, whoprog_1, IPPROTO_TCP)) {
+		fprintf (stderr, "%s", "unable to register (WHOPROG, WHOVERS, tcp).");
 		exit(1);
 	}
 
