@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     server = argv[1];
 
     // 클라이언트 핸들 생성
-    clnt = clnt_create(server, WHO_PROG, WHO_VERS, "tcp");
+    clnt = clnt_create(server, WHOPROG, WHOVERS, "tcp");
     if (clnt == NULL) {
         clnt_pcreateerror(server);
         exit(1);
