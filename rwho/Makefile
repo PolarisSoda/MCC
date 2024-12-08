@@ -20,5 +20,5 @@ $(GEN): who.x
 	$(RPCCOM) who.x
 
 clean:
-	rm -f $(GEN) *.o $(BIN)
+	rm -f *.o $(BIN)
 
