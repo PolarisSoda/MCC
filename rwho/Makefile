@@ -1,43 +1,24 @@
-# Makefile
-
-# 컴파일러 설정
+BIN = client server
+GEN = who_clnt.c who_svc.c who.h
+RPCCOM = rpcgen
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -I/usr/include/tirpc
+LDFLAGS = -ltirpc
 
-# 타겟 실행 파일 이름
-CLIENT = who_client
-SERVER = who_server
+all: $(GEN) $(BIN)
 
-# 소스 파일들
-CLIENT_SRCS = who_clnt.c who_xdr.c
-SERVER_SRCS = who_svc.c who_xdr.c who.c
+client: who_clnt.o
+	$(CC) -o $@ who_clnt.o $(LDFLAGS)
 
-# 객체 파일들
-CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
-SERVER_OBJS = $(SERVER_SRCS:.c=.o)
+server: who_svc.o
+	$(CC) -o $@ who_svc.o $(LDFLAGS)
 
-# 헤더 파일
-INCLUDES = who.h
+%.o: %.c who.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# 기본 타겟
-all: $(CLIENT) $(SERVER)
+$(GEN): who.x
+	$(RPCCOM) who.x
 
-# rpcgen을 사용하여 소스 파일 생성
-who.h who_clnt.c who_svc.c who_xdr.c: who.x
-    rpcgen who.x
-
-# 클라이언트 컴파일
-$(CLIENT): $(CLIENT_OBJS)
-    $(CC) $(CFLAGS) -o $(CLIENT) $(CLIENT_OBJS)
-
-# 서버 컴파일
-$(SERVER): $(SERVER_OBJS)
-    $(CC) $(CFLAGS) -o $(SERVER) $(SERVER_OBJS)
-
-# 객체 파일 컴파일 규칙
-%.o: %.c $(INCLUDES)
-    $(CC) $(CFLAGS) -c $<
-
-# 정리
 clean:
-    rm -f $(CLIENT) $(SERVER) *.o who.h who_clnt.c who_svc.c who_xdr.c
+	rm -f $(GEN) *.o $(BIN)
+
