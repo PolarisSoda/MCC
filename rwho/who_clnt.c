@@ -33,9 +33,9 @@ int main(int argc, char *argv[]) {
 		return 1;
     }
 
-    client = clnt_create(argv[0], WHOPROG, WHOVERS, "udp");
+    client = clnt_create(argv[1], WHOPROG, WHOVERS, "udp");
     if(client == NULL) {
-        clnt_pcreateerror(server);
+        clnt_pcreateerror(argv[1]);
 		return 1;
     }
 
