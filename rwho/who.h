@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 
-#define WHOPROG 89848
+#define WHOPROG 81381
 #define WHOVERS 1
 
 #if defined(__STDC__) || defined(__cplusplus)
