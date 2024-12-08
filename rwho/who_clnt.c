@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     }
 
     // 서버의 RPC 함수 호출
-    result = get_logged__users_1(NULL, clnt);
+    result = get_logged_users_1(NULL, clnt);
     if (result == NULL) {
         clnt_perror(clnt, "원격 호출 실패");
         exit(1);
